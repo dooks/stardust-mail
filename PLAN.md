@@ -247,6 +247,43 @@ All commands are async and return JSON. Failures are `CmdError`.
 - **Links:** the iframe uses `sandbox="allow-popups"`, and the host's `on_new_window` checks the scheme (http, https, mailto, tel) and opens the link with `tauri-plugin-opener` **from Rust**. Every navigation is denied.
 - **Window focus and minimize state** are tracked in Rust and feed the `Cadence`.
 
+### 3.8 As built in Wave 0 (this overrides §3.1–3.7 where they differ)
+**The code in the `skeleton` commit is the contract.** Read the signatures in the crate sources. Notable choices:
+- **`MailCache`** (in `mail-model\src\traits.rs`):
+  - Every method is sync and returns `Result<_, CacheError>`.
+  - `now_ms` is passed in explicitly (`upsert_meta`, `put_body`, `touch_opened`, `evict`).
+  - `set_cursor(cursor, synced_at_ms)`; `rows(label, before, limit, include_stale)`; `put_body` returns `false` above the cap; `evict` returns `EvictReport`.
+  - `upsert_meta(.., UpsertMode)`: `Always` for folder fills, `Admit` for poll hydration (S4's admit rule).
+  - A window labelled `"ALL"` is All Mail and matches any label set.
+- **`AuthError`** has the extra variants `Config | Network | Store | Protocol`. An offline token refresh is `Network`, never `NeedsReauth`.
+- **`CmdError.detail`** is a machine-readable sub-code (`missing_scope`, `cancelled`, `timeout`, `needs_reauth`, …). The UI branches on it.
+- **gauth login:**
+  - `begin_login` does **not** open the browser. The UI shows the "tick *Read all your email*" modal first, then calls `reopen_browser`.
+  - `PendingLogin::handle()` returns a cloneable `LoginHandle` (cancel or reopen while another task awaits).
+  - `complete_login` doesn't save; the caller calls `Store::save`.
+  - `Endpoints` on `Client` and the `*_at` functions exist for httpmock.
+- **`build_tree`** is implemented in `mail-model`.
+  - It always emits the fixed system folders and the 5 categories.
+  - Group ids are `group:<path>`, the Categories header is `group:categories`, and All Mail is `ALL`.
+  - Unread counts are filled in by the service.
+- **mail-sync:**
+  - `Kind::of(&ApiError)` drives `Backoff::next(kind, base) -> Plan { delay, ui, resync }`.
+  - `NeedsReauth` stops polling at once.
+  - `Cadence::jittered(base, unit)` takes the random unit as an argument, for tests.
+  - `PollReport.resynced`.
+- **mail-render:**
+  - `Parsed` carries every part with its bytes (`parts: Vec<Part>`), so `part()` doesn't re-parse.
+  - Public extras: `message_row`, `asset_url`, `parse_asset_path`, `inline_safe_mime`.
+  - `fixtures` module: `hostile_html(canary)`.
+- **mail-service:**
+  - `save_attachment(.., &dyn FileSaver)`. The host implements `FileSaver` (dialog + `settings.json`), so the service stays Tauri-free.
+  - Also `asset()`, `set_window_state()` and `shutdown()`.
+- **Host:**
+  - The main window is created in code (label `main`, so the navigation and new-window hooks can be attached).
+  - Features: `default = ["custom-protocol"]`, plus `mock`.
+  - The Tauri CSP is `null` for now. **WP-F decides** on a tight app CSP that still lets the srcdoc iframe load `gmail-asset.localhost`, `data:` and, with "Show images", `https:`/`http:` (a srcdoc iframe inherits the parent's CSP).
+- **Extra workspace deps:** `chrono`, `encoding_rs`. Use `reqwest::Url` (there's no separate `url` crate).
+
 **Stub lint allowances:** stub files start with `#![allow(unused_variables, dead_code)]` under a "Wave 0 stubs" comment. Remove it when the file is implemented.
 
 ---

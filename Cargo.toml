@@ -1,0 +1,71 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/mail-model",
+    "crates/win-dpapi",
+    "crates/gauth",
+    "crates/gmail-api",
+    "crates/mail-cache",
+    "crates/mail-sync",
+    "crates/mail-render",
+    "crates/mail-service",
+    "app/src-tauri",
+]
+# The spikes are standalone reference crates with their own lockfiles; they must keep building on their own.
+exclude = ["spikes"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+publish = false
+license = "MIT"
+
+[workspace.dependencies]
+# Internal crates
+mail-model = { path = "crates/mail-model" }
+win-dpapi = { path = "crates/win-dpapi" }
+gauth = { path = "crates/gauth" }
+gmail-api = { path = "crates/gmail-api" }
+mail-cache = { path = "crates/mail-cache" }
+mail-sync = { path = "crates/mail-sync" }
+mail-render = { path = "crates/mail-render" }
+mail-service = { path = "crates/mail-service" }
+
+# Common
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tracing = "0.1"
+tokio = { version = "1", features = ["sync", "time", "macros", "rt", "rt-multi-thread", "net", "io-util"] }
+
+# I/O
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "http2", "charset"] }
+rusqlite = { version = "0.41", features = ["bundled"] }
+chacha20poly1305 = "0.10"
+getrandom = "0.3"
+sha2 = "0.10"
+base64 = "0.23"
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Security_Cryptography", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }
+
+# Mail
+mail-parser = { version = "1.0", features = ["full_encoding"] }
+ammonia = "4"
+encoding_rs = "0.8"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+
+# App
+tauri = { version = "2.12", features = [] }
+tauri-build = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+
+# Dev
+httpmock = "0.9"
+
+# Profiles must live at the workspace root.
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true

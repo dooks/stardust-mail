@@ -1,0 +1,23 @@
+[package]
+name = "gauth"
+description = "Google OAuth sign-in (loopback + PKCE), DPAPI token store, access-token cache, revoke."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+mail-model.workspace = true
+win-dpapi.workspace = true
+base64.workspace = true
+getrandom.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+windows.workspace = true
+
+[dev-dependencies]
+httpmock.workspace = true

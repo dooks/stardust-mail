@@ -1,0 +1,9 @@
+[package]
+name = "win-dpapi"
+description = "Windows DPAPI protect/unprotect (CurrentUser scope, no UI, caller-supplied entropy)."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows = { workspace = true, features = [] }

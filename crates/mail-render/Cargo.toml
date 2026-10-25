@@ -1,0 +1,13 @@
+[package]
+name = "mail-render"
+description = "MIME parse, body choice, sanitize, page wrap, sender check and attachments for gmail-ro."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+mail-model.workspace = true
+ammonia.workspace = true
+chrono.workspace = true
+encoding_rs.workspace = true
+mail-parser.workspace = true

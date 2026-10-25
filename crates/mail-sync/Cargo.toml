@@ -1,0 +1,11 @@
+[package]
+name = "mail-sync"
+description = "Polling scheduler policy (PollGate, Backoff, Cadence), history deltas, folder fill and resync."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+mail-model.workspace = true
+tokio.workspace = true
+tracing.workspace = true

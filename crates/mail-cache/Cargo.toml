@@ -1,0 +1,15 @@
+[package]
+name = "mail-cache"
+description = "Per-account encrypted SQLite cache (ChaCha20-Poly1305 blobs, DPAPI-protected key)."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+mail-model.workspace = true
+win-dpapi.workspace = true
+chacha20poly1305.workspace = true
+getrandom.workspace = true
+rusqlite.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
