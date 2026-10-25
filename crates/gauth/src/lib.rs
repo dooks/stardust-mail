@@ -1,11 +1,7 @@
 //! Google OAuth for gmail-ro (PLAN §3.2, WP-A): loopback + PKCE sign-in in the system browser, a DPAPI token
 //! store, a per-account access-token cache, revoke and tokeninfo.
 //!
-//! Wave 0 stubs: every function body is `todo!()`; signatures are final.
-//!
 //! Privacy: never log tokens, authorization codes, `state`, verifiers or Authorization headers.
-
-#![allow(unused_variables, dead_code)] // Wave 0 stubs: remove when the file is implemented.
 
 mod client;
 mod login;
