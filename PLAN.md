@@ -282,6 +282,9 @@ All commands are async and return JSON. Failures are `CmdError`.
   - The main window is created in code (label `main`, so the navigation and new-window hooks can be attached).
   - Features: `default = ["custom-protocol"]`, plus `mock`.
   - The Tauri CSP is `null` for now. **WP-F decides** on a tight app CSP that still lets the srcdoc iframe load `gmail-asset.localhost`, `data:` and, with "Show images", `https:`/`http:` (a srcdoc iframe inherits the parent's CSP).
+- **UI expectations (WP-G, as merged):**
+  - The UI shows the "tick *Read all your email*" modal itself, then calls `add_account` or `reauth`. **Those service commands must open the browser themselves:** `begin_login` → `handle.reopen_browser()` → `complete_login`. `reopen_sign_in` is only for the Re-open button.
+  - `messages(more: true)` may return either the extended list or only the new rows. The UI merges by id and sorts by `internalDate`.
 - **Extra workspace deps:** `chrono`, `encoding_rs`. Use `reqwest::Url` (there's no separate `url` crate).
 
 **Stub lint allowances:** stub files start with `#![allow(unused_variables, dead_code)]` under a "Wave 0 stubs" comment. Remove it when the file is implemented.
