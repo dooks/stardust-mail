@@ -1,12 +1,7 @@
 //! Freshness and fill logic (PLAN §3.6, WP-D). Talks only to the `GmailApi` and `MailCache` traits, so it is tested
 //! against in-crate fakes and depends on neither the real cache nor the real client.
 //!
-//! Wave 0 stubs: bodies are `todo!()`; signatures are final. Port `spikes\s4-sync\src\gate.rs` and the poll logic
-//! of `main.rs` / `delta.rs`.
-//!
 //! Privacy: log ids, counts and timings only.
-
-#![allow(unused_variables, dead_code)] // Wave 0 stubs: remove when the file is implemented.
 
 mod cadence;
 mod gate;
