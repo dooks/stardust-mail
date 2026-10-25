@@ -5,12 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>gmail-ro</title>
     <link rel="stylesheet" href="app.css" />
+    <script src="mock.js"></script>
     <script src="app.js" defer></script>
   </head>
   <body>
-    <main>
-      <h1>gmail-ro</h1>
-      <p id="status">Placeholder UI (WP-G builds the real one).</p>
+    <header class="toolbar">
+      <button id="refresh" class="btn" type="button" title="Refresh (R)">
+        <span class="spinner" aria-hidden="true"></span><span id="refresh-label">Refresh</span>
+      </button>
+      <span id="status-text" class="status" role="status"></span>
+      <span id="mock-badge" class="mock-badge" hidden>mock data</span>
+    </header>
+    <div id="banner" class="banner" hidden>
+      <span id="banner-text"></span>
+      <button id="banner-btn" class="btn" type="button">Sign in again</button>
+    </div>
+    <main id="app">
+      <nav id="side-pane" class="pane" aria-label="Accounts and folders">
+        <ul id="accounts" class="accounts" aria-label="Accounts"></ul>
+        <button id="add-account" class="btn add" type="button">Add account</button>
+        <ul id="folders" class="list folders" role="listbox" aria-label="Folders"></ul>
+      </nav>
+      <section id="list-pane" class="pane" aria-label="Messages">
+        <div id="list-heading" class="pane-heading"></div>
+        <ul id="messages" class="list" role="listbox" tabindex="0" aria-label="Messages"></ul>
+        <p id="list-empty" class="empty" hidden></p>
+      </section>
+      <article id="read-pane" class="pane" aria-label="Message">
+        <p id="read-empty" class="empty">Select a message</p>
+        <div id="reader" class="reader" hidden>
+          <div id="head" class="head">
+            <h2 id="h-subject" class="h-subject"></h2>
+            <dl id="h-fields" class="h-fields"></dl>
+            <div id="h-labels" class="chips"></div>
+            <div id="h-auth" class="auth"><span id="h-auth-badge" class="badge"></span><span id="h-auth-line"></span></div>
+          </div>
+          <div id="atts" class="atts" hidden></div>
+          <div id="img-bar" class="img-bar" hidden>
+            <span id="img-bar-text"></span>
+            <button id="img-show" class="btn" type="button">Show images</button>
+          </div>
+          <iframe id="mail-frame" title="Message" sandbox="allow-popups"></iframe>
+        </div>
+      </article>
     </main>
+    <div id="menu" class="menu" role="menu" hidden></div>
+    <div id="modal-root"></div>
+    <div id="toast" class="toast" role="status" hidden></div>
   </body>
 </html>
