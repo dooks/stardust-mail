@@ -19,14 +19,17 @@ default = ["custom-protocol"]
 # Embeds the UI instead of expecting a dev server; needed for plain `cargo run` / `cargo build`.
 custom-protocol = ["tauri/custom-protocol"]
 # UI development only: canned data from a MockService instead of Gmail (WP-F).
-mock = []
+mock = ["dep:mail-render"]
 
 [dependencies]
 mail-model.workspace = true
 mail-service.workspace = true
+# Mock only: the hostile-email fixture. The real path gets rendering through mail-service.
+mail-render = { workspace = true, optional = true }
 tauri.workspace = true
 tauri-plugin-dialog.workspace = true
 tauri-plugin-opener.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tracing.workspace = true
+tokio.workspace = true
