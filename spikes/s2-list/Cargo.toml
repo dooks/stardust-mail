@@ -1,0 +1,23 @@
+[package]
+name = "s2-list"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Spike S2: Gmail labels and message-list behaviour (read-only, GET only)."
+
+[lib]
+name = "s2lib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "s2"
+path = "src/main.rs"
+
+[dependencies]
+gtoken = { path = "../s0-token" }
+base64 = "0.23"
+chrono = { version = "0.4", default-features = false, features = ["std"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "http2"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1.54", features = ["time", "sync", "rt-multi-thread", "macros"] }

@@ -1,0 +1,23 @@
+From: Alice Example <alice@example.com>
+To: Bob <bob@example.org>, carol@example.net
+Cc: "Dave, D." <dave@example.org>
+Reply-To: replies@lists.example.com
+Subject: Plain subject
+Date: Sat, 20 Nov 2021 14:22:01 -0800
+Message-ID: <alt-1@example.com>
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@example.com header.s=sel header.b=AbCd;
+       spf=pass (google.com: domain of bounce@mail.example.com designates 1.2.3.4 as permitted sender) smtp.mailfrom=bounce@mail.example.com;
+       dmarc=pass (p=NONE sp=NONE dis=NONE) header.from=example.com
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="b1"
+
+--b1
+Content-Type: text/plain; charset="UTF-8"
+
+Your code is 123456. See https://example.com/verify?x=1&y=2.
+--b1
+Content-Type: text/html; charset="UTF-8"
+
+<html><body bgcolor="#eeeeee"><table width="600"><tr><td style="padding:8px">Your code is <b>123456</b></td></tr></table></body></html>
+--b1--

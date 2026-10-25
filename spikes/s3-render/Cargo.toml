@@ -1,0 +1,36 @@
+[package]
+name = "s3-render"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Spike S3: Gmail message parsing, sanitizing and rendering."
+
+# The Tauri harness (harness/src-tauri) is a separate package with its own workspace.
+[workspace]
+exclude = ["harness"]
+
+[lib]
+name = "s3render"
+path = "src/lib.rs"
+
+[[bin]]
+name = "s3"
+path = "src/main.rs"
+required-features = ["fetch"]
+
+[features]
+default = ["fetch"]
+# Network side (Gmail fetch). The harness depends on the library without it.
+fetch = ["dep:gtoken", "dep:tokio", "dep:reqwest"]
+
+[dependencies]
+ammonia = "4.2"
+base64 = "0.22"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+encoding_rs = "0.8"
+mail-parser = { version = "1.0", features = ["full_encoding"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+gtoken = { path = "../s0-token", optional = true }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"], optional = true }
+tokio = { version = "1.54", features = ["rt-multi-thread", "macros", "time", "sync"], optional = true }

@@ -1,0 +1,23 @@
+[package]
+name = "s3-harness"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Spike S3 harness: sandboxed-iframe rendering, gmail-asset protocol, link interception."
+
+# Own workspace: the parent crate (s3-render) is a different package.
+[workspace]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[features]
+default = ["custom-protocol"]
+# Embeds the UI instead of expecting a dev server; needed for plain `cargo run`.
+custom-protocol = ["tauri/custom-protocol"]
+
+[dependencies]
+s3-render = { path = "../..", default-features = false }
+tauri = { version = "2.12", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

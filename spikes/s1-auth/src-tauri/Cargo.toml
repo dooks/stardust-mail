@@ -1,0 +1,20 @@
+[package]
+name = "s1-auth"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+description = "Spike S1: Tauri auth app"
+
+[lib]
+name = "s1_auth_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = "2.6"
+
+[dependencies]
+authcore = { path = "../core" }
+tauri = "2.12"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1.54", features = ["sync", "time"] }

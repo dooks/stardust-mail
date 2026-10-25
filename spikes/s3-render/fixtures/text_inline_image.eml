@@ -1,0 +1,22 @@
+From: Eve <eve@example.com>
+To: me@example.org
+Subject: Photo
+Date: Tue, 23 Nov 2021 12:00:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="m"
+
+--m
+Content-Type: text/plain; charset=us-ascii
+
+Before the picture.
+--m
+Content-Type: image/png; name="pic.png"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline; filename="pic.png"
+
+iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==
+--m
+Content-Type: text/plain; charset=us-ascii
+
+After the picture.
+--m--

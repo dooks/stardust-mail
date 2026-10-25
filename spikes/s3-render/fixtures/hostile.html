@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html><head>
+<title>HOSTILE-TITLE</title>
+<base href="http://{{C}}/base/">
+<meta http-equiv="refresh" content="0;url=http://{{C}}/meta-refresh">
+<link rel="stylesheet" href="http://{{C}}/link.css">
+<style>
+@import url(http://{{C}}/import.css);
+@font-face { font-family: Evil; src: url(http://{{C}}/font.woff2); }
+body { font-family: Evil, sans-serif; background-image: url(http://{{C}}/body-bg.png); }
+.bg { background: url('http://{{C}}/css-bg.png'); }
+#t-keep { color: rgb(0,128,0); }
+@media (prefers-color-scheme: dark) { #t-keep { color: rgb(255,0,0); } }
+</style>
+<script>fetch('http://{{C}}/script-head'); parent.postMessage('script-ran-head','*')</script>
+</head>
+<body onload="fetch('http://{{C}}/onload')" background="http://{{C}}/body-attr-bg.png" bgcolor="#ffeedd">
+<script>fetch('http://{{C}}/script-body'); parent.postMessage('script-ran-body','*')</script>
+<p id="t-keep" onclick="fetch('http://{{C}}/onclick')">Visible text</p>
+<img id="t-remote" src="http://{{C}}/img-remote.png" onerror="fetch('http://{{C}}/onerror')">
+<img id="t-bad" src="x:y" onerror="parent.postMessage('onerror-ran','*')">
+<img id="t-pixel" src="http://{{C}}/pixel.gif" width="1" height="1">
+<img id="t-proto" src="//{{C}}/proto-rel.png">
+<img id="t-data" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==" width="20" height="20">
+<div id="t-bg" class="bg" style="background:url(http://{{C}}/inline-style-bg.png); width:20px; height:20px">bg</div>
+<a id="l-js" href="javascript:fetch('http://{{C}}/js-link')">js link</a>
+<a id="l-data" href="data:text/html,<script>parent.postMessage('data-link','*')</script>">data link</a>
+<a id="l-https" href="https://example.com/path?a=1">https link</a>
+<a id="l-mailto" href="mailto:x@example.com">mail link</a>
+<a id="l-frag" href="#bottom">fragment</a>
+<a id="l-file" href="file:///C:/nonexistent/test.txt">file link</a>
+<a id="l-ms" href="ms-msdt:/id PCWDiagnostic">ms link</a>
+<form id="t-form" action="http://{{C}}/form" method="post"><input name="q" value="secret"><button type="submit">Send</button></form>
+<iframe src="http://{{C}}/iframe">iframe-fallback</iframe>
+<object data="http://{{C}}/object"></object><embed src="http://{{C}}/embed">
+<svg onload="fetch('http://{{C}}/svg')"><image href="http://{{C}}/svgimg"/></svg>
+<video src="http://{{C}}/video" poster="http://{{C}}/poster"></video>
+<table id="t-table" background="http://{{C}}/table-bg.png" width="300" bgcolor="#cccccc" align="center"><tr><td valign="top" style="padding:6px">cell</td></tr></table>
+<div id="bottom" style="margin-top:600px">bottom</div>
+</body></html>

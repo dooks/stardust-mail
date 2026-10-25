@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>S3 harness</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<aside>
+  <h1>Messages</h1>
+  <ul id="list"></ul>
+</aside>
+<main>
+  <div id="toolbar">
+    <label><input type="checkbox" id="images"> Show images</label>
+    <label>Dark
+      <select id="dark">
+        <option value="html-white">text dark, HTML white</option>
+        <option value="light">all light</option>
+        <option value="html-invert">text dark, HTML inverted</option>
+      </select>
+    </label>
+    <label>Iframe sandbox
+      <select id="sbox">
+        <option value="allow-same-origin">A: allow-same-origin (parent attaches click listeners)</option>
+        <option value="allow-popups">B: allow-popups (Rust on_new_window)</option>
+      </select>
+    </label>
+    <button id="autotest">Run self-test</button>
+  </div>
+  <div id="hdr"></div>
+  <div id="status"></div>
+  <iframe id="frame" title="Message" referrerpolicy="no-referrer"></iframe>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

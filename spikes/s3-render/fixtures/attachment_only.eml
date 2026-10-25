@@ -1,0 +1,22 @@
+From: Frank <frank@example.com>
+To: me@example.org
+Subject: File
+Date: Wed, 24 Nov 2021 12:00:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="m"
+
+--m
+Content-Type: application/octet-stream; name="data.bin"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="data.bin"
+
+AAECAwQF
+--m
+Content-Type: message/rfc822
+Content-Disposition: attachment
+
+From: Inner <inner@example.com>
+Subject: Forwarded
+
+inner body
+--m--

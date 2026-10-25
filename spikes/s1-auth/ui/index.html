@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>gmail-ro S1 auth spike</title>
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>gmail-ro - S1 auth spike</h1>
+<p class="muted">Read-only scope only. Token store: <code id="dir"></code></p>
+
+<section>
+  <h2>Accounts</h2>
+  <div class="row">
+    <button id="add">Add account</button>
+    <label>login_hint <input id="hint" placeholder="optional@gmail.com" size="28"></label>
+    <label>timeout (s) <input id="timeout" type="number" value="300" min="5" max="900" style="width:5em"></label>
+    <label title="If Gmail is unticked: one labels.list GET with the scope-reduced token to record the 403"><input id="probe" type="checkbox"> diagnostic: probe scope-reduced token</label>
+  </div>
+  <div id="pending" class="banner" hidden>
+    <span id="pending-text">Waiting for the browser...</span>
+    <button id="reopen">Re-open browser page</button>
+    <button id="cancel">Cancel sign-in</button>
+  </div>
+  <div id="notice" class="banner" hidden></div>
+  <ul id="accounts"></ul>
+  <div class="row small">
+    <label><input id="offline" type="checkbox"> sign-out test: simulate offline (revoke fails, local delete still happens)</label>
+    <label><input id="resend" type="checkbox"> sign-out test: send revoke twice (records the "already revoked" answer)</label>
+  </div>
+</section>
+
+<section>
+  <h2>Embedded WebView2 test</h2>
+  <p class="muted">Opens Google's sign-in page inside a WebView2 window, to record what Google does. Do not sign in there; just report what you see, then close it.</p>
+  <button id="embedded">Try sign-in in embedded webview</button>
+</section>
+
+<section>
+  <h2>Log <button id="copy">Copy log</button> <button id="clear">Clear</button></h2>
+  <pre id="log"></pre>
+</section>
+<script src="main.js"></script>
+</body>
+</html>
