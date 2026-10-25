@@ -1,0 +1,25 @@
+[package]
+name = "gtoken"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Spike S0: Gmail OAuth (loopback + PKCE) login, DPAPI token store, cached access tokens."
+
+[lib]
+name = "gtoken"
+path = "src/lib.rs"
+
+[[bin]]
+name = "gtoken"
+path = "src/main.rs"
+
+[dependencies]
+base64 = "0.23"
+getrandom = "0.3"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+thiserror = "2"
+tokio = { version = "1.54", features = ["net", "time", "io-util", "sync", "rt-multi-thread", "macros"] }
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Security_Cryptography", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }

@@ -1,0 +1,20 @@
+# Build output
+target/
+out/
+
+# Secrets and private data: never commit
+*.dpapi
+client_secret*.json
+oauth-client.json
+spikes/*/out/
+*.sqlite
+*.sqlite-*
+
+# Tauri generated schemas
+app/src-tauri/gen/schemas
+spikes/*/src-tauri/gen/schemas
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.idea
