@@ -1535,6 +1535,7 @@ name = "gmail-api"
 version = "0.1.0"
 dependencies = [
  "base64 0.23.1",
+ "futures-util",
  "httpmock",
  "mail-model",
  "reqwest 0.12.28",
