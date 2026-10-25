@@ -173,11 +173,20 @@ pub async fn fill_folder<A: GmailApi, C: MailCache>(
     let page = api.list(filter, token.as_deref(), PAGE_SIZE).await?;
     let listed: Vec<MessageId> = page.ids.iter().map(|(id, _)| id.clone()).collect();
     let cached = cache.has(&listed).map_err(cache_err)?;
+    let cached_oldest = if cached.is_empty() {
+        None
+    } else {
+        let rows = cache.rows(label, None, 10_000, true).map_err(cache_err)?;
+        rows.iter().filter(|m| cached.contains(&m.id)).map(|m| m.internal_date_ms).min()
+    };
     let missing: Vec<MessageId> = listed.into_iter().filter(|id| !cached.contains(id)).collect();
     let hydrated = hydrate(api, cache, &missing, UpsertMode::Always).await?;
 
-    // Rows skipped as already cached have unknown dates here; a fresh window then only claims what was fetched.
-    let known = [existing.as_ref().map(|w| w.oldest_date), hydrated.oldest].into_iter().flatten().min();
+    // Oldest date over the newly fetched rows and the already-cached listed rows.
+    let known = [existing.as_ref().map(|w| w.oldest_date), hydrated.oldest, cached_oldest]
+        .into_iter()
+        .flatten()
+        .min();
     cache
         .set_window(&Window {
             label: label.clone(),
@@ -414,8 +423,14 @@ mod tests {
             });
             Ok(metas.len())
         }
-        fn rows(&self, _l: &LabelId, _b: Option<i64>, _n: usize, _s: bool) -> Result<Vec<MessageMeta>, CacheError> {
-            Ok(vec![])
+        fn rows(&self, l: &LabelId, _b: Option<i64>, _n: usize, _s: bool) -> Result<Vec<MessageMeta>, CacheError> {
+            Ok(self.with(|s| {
+                s.rows
+                    .values()
+                    .filter(|m| l.as_str() == "ALL" || m.label_ids.contains(l))
+                    .cloned()
+                    .collect()
+            }))
         }
         fn has(&self, ids: &[MessageId]) -> Result<HashSet<MessageId>, CacheError> {
             Ok(self.with(|s| ids.iter().filter(|i| s.rows.contains_key(*i)).cloned().collect()))
@@ -703,6 +718,24 @@ mod tests {
         // 20 uncached ids: a single first batch.
         assert_eq!(api.with(|s| s.batch_sizes.clone()), vec![20]);
         assert!(cache.with(|s| s.windows[&LabelId::new("ALL")].complete));
+    }
+
+    #[tokio::test]
+    async fn fill_folder_all_cached_page_keeps_real_oldest_date() {
+        let (api, cache, _log) = setup();
+        let ids = seed_ids(&api, 30);
+        let inbox = LabelId::new("INBOX");
+        api.with(|s| s.lists.insert(String::new(), list_page(&ids, Some("t2"))));
+        fill_folder(&api, &cache, &inbox, false).await.unwrap();
+        let batches = api.with(|s| s.batch_sizes.len());
+        // Second fill: every id is cached, nothing is fetched, the window still reaches back to the oldest row.
+        fill_folder(&api, &cache, &inbox, false).await.unwrap();
+        assert_eq!(api.with(|s| s.batch_sizes.len()), batches);
+        assert_eq!(cache.with(|s| s.windows[&inbox].oldest_date), 971);
+        // Same for All Mail.
+        let all = LabelId::new("ALL");
+        fill_folder(&api, &cache, &all, false).await.unwrap();
+        assert_eq!(cache.with(|s| s.windows[&all].oldest_date), 971);
     }
 
     #[tokio::test]
