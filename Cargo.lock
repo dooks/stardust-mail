@@ -2400,6 +2400,7 @@ name = "mail-render"
 version = "0.1.0"
 dependencies = [
  "ammonia",
+ "base64 0.23.1",
  "chrono",
  "encoding_rs",
  "mail-model",
