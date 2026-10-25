@@ -32,11 +32,45 @@ impl Default for Cadence {
 impl Cadence {
     /// The base interval for an account given the window state and whether it is the active account.
     pub fn interval(&self, window: WindowState, is_active_account: bool) -> Duration {
-        todo!()
+        match window {
+            WindowState::Focused if is_active_account => self.focused_active,
+            WindowState::Focused => self.focused_other,
+            WindowState::Unfocused => self.unfocused,
+            WindowState::Minimized => self.minimized,
+        }
     }
 
     /// `base` scaled by `1 + jitter * (2 * unit - 1)`; `unit` is a random number in `[0, 1]` (injected for tests).
     pub fn jittered(&self, base: Duration, unit: f64) -> Duration {
-        todo!()
+        let unit = if unit.is_finite() { unit.clamp(0.0, 1.0) } else { 0.5 };
+        let factor = (1.0 + self.jitter * (2.0 * unit - 1.0)).max(0.0);
+        base.mul_f64(factor)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn interval_selection() {
+        let c = Cadence::default();
+        assert_eq!(c.interval(WindowState::Focused, true), Duration::from_secs(5));
+        assert_eq!(c.interval(WindowState::Focused, false), Duration::from_secs(15));
+        assert_eq!(c.interval(WindowState::Unfocused, true), Duration::from_secs(30));
+        assert_eq!(c.interval(WindowState::Unfocused, false), Duration::from_secs(30));
+        assert_eq!(c.interval(WindowState::Minimized, true), Duration::from_secs(60));
+        assert_eq!(c.interval(WindowState::Minimized, false), Duration::from_secs(60));
+    }
+
+    #[test]
+    fn jitter_bounds() {
+        let c = Cadence::default();
+        let base = Duration::from_secs(10);
+        assert_eq!(c.jittered(base, 0.0), Duration::from_secs(8));
+        assert_eq!(c.jittered(base, 0.5), base);
+        assert_eq!(c.jittered(base, 1.0), Duration::from_secs(12));
+        assert_eq!(c.jittered(base, 7.0), Duration::from_secs(12));
+        assert_eq!(c.jittered(base, f64::NAN), base);
     }
 }
