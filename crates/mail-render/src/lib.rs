@@ -4,17 +4,17 @@
 //! document for `<iframe srcdoc>`; `header_block`, `auth_summary`, `attachments` feed the header area; `part` and
 //! `asset_headers` serve the `gmail-asset` protocol and attachment saves.
 //!
-//! Wave 0 stubs: bodies are `todo!()`; signatures are final. Port `spikes\s3-render\src\{parse,auth,text,sanitize,
-//! render}.rs` with its tests and fixtures unchanged in behaviour, except: the page is always white with dark text
-//! (remove the dark-text and invert experiments).
+//! Port of spike S3 (parse, auth, text, sanitize, render) with S2 address and snippet helpers. The page is always
+//! white with dark text.
 //!
 //! Privacy: never log header values or bodies.
 
-#![allow(unused_variables, dead_code)] // Wave 0 stubs: remove when the file is implemented.
-
+mod auth;
 mod meta;
 mod parse;
 mod render;
+mod sanitize;
+mod text;
 
 pub use meta::{HeaderBlock, auth_summary, attachments, header_block, message_row, parse_from, snippet_text};
 pub use parse::{BodyItem, BodyKind, Part, Parsed, fix_c1, norm_cid, parse};
