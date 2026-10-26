@@ -412,12 +412,17 @@ Start each agent with: "Read `CLAUDE.md`, `PLAN.md` §1, §3 and your WP section
 ---
 
 ## 6. Wave 3: finishing (parallel, after WP-I)
-- **WP-J, packaging:** `cargo tauri build` produces an NSIS installer (per-user, no admin) with an icon. Confirm the WebView2 bootstrapper.
-- **WP-K, hardening:**
-  - proptest/fuzz `mail-render::parse` and `sanitize`
+- **WP-J, release binary (no installer; user decision):** a single portable `gmail-ro.exe` from `cargo build --release -p gmail-ro`, to drop into `C:\Apps`. The UI is embedded, it runs as a GUI app (no console), and its data lives in `%LOCALAPPDATA%\com.ziggy.gmail-ro`. It relies on the WebView2 runtime that ships with Windows 11. Done by the coordinator after K1–K3 merge.
+- **WP-K1, render hardening** (`crates\mail-render\**`):
+  - proptest `parse`, `render` and the sanitizer on arbitrary and mutated input (no panics, and the output invariants hold)
   - a 2 MB cap on rendered page size, falling back to plain text
-  - a redacted log file at `%LOCALAPPDATA%\com.ziggy.gmail-ro\logs`, with the dates of sign-ins and re-auth triggers
-  - a final read-only audit: grep the whole workspace for non-GET Gmail calls
+- **WP-K2, stale-message fix** (`mail-model` trait, `mail-cache`, `mail-sync` test fakes, `mail-service`):
+  - add `MailCache::meta(id) -> Option<(MessageMeta, stale: bool)>`
+  - `Service::message` revalidates a stale row with one metadata get before opening it: a deleted message shows a friendly "no longer in Gmail" state, not an error.
+  - The internalDate fallback uses `meta` instead of scanning.
+- **WP-K3, logging and audit** (`app\src-tauri\**`, `crates\mail-service` logging calls only if needed):
+  - a redacted rolling log file at `%LOCALAPPDATA%\com.ziggy.gmail-ro\logs`, with the dates of sign-ins and re-auth triggers
+  - a final read-only audit: grep the whole workspace for non-GET Gmail calls and forbidden endpoints, reported as a test
 
 ---
 
@@ -427,7 +432,7 @@ Start each agent with: "Read `CLAUDE.md`, `PLAN.md` §1, §3 and your WP section
 | 0 | 1 | skeleton + contracts | – |
 | 1 | **7 in parallel** | A, B, C, D, E, F, G | Wave 0 |
 | 2 | 1, then 1 (+user) | H, then I | all of Wave 1 |
-| 3 | 2 in parallel | J, K | I |
+| 3 | 3 in parallel, then J | K1, K2, K3, then J | I |
 
 ## 8. Definition of done
 - Three accounts are signed in.
