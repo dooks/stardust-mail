@@ -230,7 +230,7 @@ async fn read_head(sock: &mut TcpStream) -> Option<String> {
 
 async fn respond(sock: &mut TcpStream, status: &str, msg: &str) {
     let body = format!(
-        "<!doctype html><meta charset=utf-8><title>stardust-mail</title>\
+        "<!doctype html><meta charset=utf-8><title>starmail</title>\
          <body style=\"font-family:system-ui;margin:3rem\"><p>{msg}</p></body>"
     );
     let resp = format!(

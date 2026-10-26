@@ -1,8 +1,8 @@
 //! Log file setup and the redaction safeguard.
 //!
-//! Logs go to a daily-rolling file `stardust-mail.<date>.log` in `<app_local_data_dir>\logs` (at most [`MAX_FILES`]
+//! Logs go to a daily-rolling file `starmail.<date>.log` in `<app_local_data_dir>\logs` (at most [`MAX_FILES`]
 //! kept; the appender deletes older ones when it starts and at each rollover). Level is INFO unless the
-//! `STARDUST_MAIL_LOG` environment variable holds a filter (for example `debug` or `mail_service=debug`). No ANSI.
+//! `STARMAIL_LOG` environment variable holds a filter (for example `debug` or `mail_service=debug`). No ANSI.
 //!
 //! The code base already logs only ids, counts and timings (CLAUDE.md). [`redact`] is a second line of defence:
 //! every event is passed through it before it reaches the file, and masks email addresses, OAuth tokens
@@ -19,7 +19,7 @@ use tracing_subscriber::fmt::MakeWriter;
 /// Rolling files kept.
 pub const MAX_FILES: usize = 7;
 /// Environment variable overriding the level / filter.
-pub const ENV_VAR: &str = "STARDUST_MAIL_LOG";
+pub const ENV_VAR: &str = "STARMAIL_LOG";
 
 const MASK: &str = "[redacted]";
 /// A base64url run at least this long is treated as a token.
@@ -31,7 +31,7 @@ pub fn init(dir: &Path) -> Result<(), String> {
     std::fs::create_dir_all(dir).map_err(|e| format!("create log dir: {e}"))?;
     let appender = RollingFileAppender::builder()
         .rotation(Rotation::DAILY)
-        .filename_prefix("stardust-mail")
+        .filename_prefix("starmail")
         .filename_suffix("log")
         .max_log_files(MAX_FILES)
         .build(dir)
@@ -267,7 +267,7 @@ mod tests {
 
     #[test]
     fn ordinary_lines_pass_through_and_unicode_is_safe() {
-        let line = "2026-10-25T10:00:00Z  INFO stardust_mail_lib: accounts loaded accounts=2 skipped=0 \u{2713} \u{00e9}";
+        let line = "2026-10-25T10:00:00Z  INFO starmail_lib: accounts loaded accounts=2 skipped=0 \u{2713} \u{00e9}";
         assert_eq!(redact(line), line);
         assert_eq!(redact("\u{00e9}x@a.com"), "\u{00e9}[redacted]");
     }

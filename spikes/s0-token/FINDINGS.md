@@ -10,7 +10,7 @@
 - **It works live:** 3 accounts are signed in, and `check` passes in a fresh process (see "Live results"). S1–S4 can now use it.
 
 ## How to run
-Put Google's Desktop-app JSON at `%LOCALAPPDATA%\com.ziggy.stardust-mail-spikes\oauth-client.json`, then run these in `spikes\s0-token`:
+Put Google's Desktop-app JSON at `%LOCALAPPDATA%\com.ziggy.starmail-spikes\oauth-client.json`, then run these in `spikes\s0-token`:
 ```
 cargo run -- login [--hint you@gmail.com]   # opens the browser; prints "signed in: <email> (messagesTotal N)"
 cargo run -- list                           # email, scopes and created_at per account
@@ -76,9 +76,9 @@ Other choices:
 
 ## Token store layout
 ```
-%LOCALAPPDATA%\com.ziggy.stardust-mail-spikes\
+%LOCALAPPDATA%\com.ziggy.starmail-spikes\
   oauth-client.json          (user-provided, never read by agents)
-  accounts\<sub>.dpapi       DPAPI(CurrentUser, UI forbidden, entropy "stardust-mail-spikes-token") of
+  accounts\<sub>.dpapi       DPAPI(CurrentUser, UI forbidden, entropy "starmail-spikes-token") of
                              {"email","sub","refresh_token","scopes":[..],"created_at":<unix secs>}
 ```
 - Each file is written as `<sub>.dpapi.tmp`, then renamed. Signing in with the same `sub` replaces the file.

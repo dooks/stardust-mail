@@ -1,4 +1,4 @@
-/* stardust-mail UI: always dark. Email content renders on white inside the iframe. */
+/* starmail UI: always dark. Email content renders on white inside the iframe. */
 :root {
   color-scheme: dark;
   --bg: #16171a; --bg-side: #1d1e22; --bg-list: #191a1d; --fg: #e6e6ea; --fg-dim: #9a9aa3;

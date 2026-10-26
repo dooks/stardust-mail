@@ -1,5 +1,5 @@
 //! DPAPI wrapper (CurrentUser scope, `CRYPTPROTECT_UI_FORBIDDEN`). Copied from spike S0 with the entropy made a
-//! parameter: callers pass their own (`stardust-mail-token` for tokens, `stardust-mail-cache-key` for cache keys), so another
+//! parameter: callers pass their own (`starmail-token` for tokens, `starmail-cache-key` for cache keys), so another
 //! process running as the same user cannot call `CryptUnprotectData` blindly.
 //!
 //! The crate is Windows-only by nature; on other platforms the functions do not exist.
@@ -31,7 +31,7 @@ pub fn protect(data: &[u8], entropy: &[u8]) -> windows::core::Result<Vec<u8>> {
     let (input, entropy) = (blob(data), blob(entropy));
     let mut out = CRYPT_INTEGER_BLOB::default();
     unsafe {
-        CryptProtectData(&input, w!("stardust-mail"), Some(&entropy), None, None, CRYPTPROTECT_UI_FORBIDDEN, &mut out)?;
+        CryptProtectData(&input, w!("starmail"), Some(&entropy), None, None, CRYPTPROTECT_UI_FORBIDDEN, &mut out)?;
         Ok(take(out))
     }
 }
@@ -51,7 +51,7 @@ pub fn unprotect(data: &[u8], entropy: &[u8]) -> windows::core::Result<Vec<u8>> 
 mod tests {
     use super::*;
 
-    const E: &[u8] = b"stardust-mail-test-entropy";
+    const E: &[u8] = b"starmail-test-entropy";
 
     #[test]
     fn roundtrip() {

@@ -4,7 +4,7 @@
 
 Code:
 - `core\` is the library `authcore` (OAuth, account store, sign-in, check, revoke, tokeninfo).
-- `src-tauri\` + `ui\` are the Tauri 2.12 app (`com.ziggy.stardust-mail-spikes-s1`). The `embedded` window gets no IPC capability.
+- `src-tauri\` + `ui\` are the Tauri 2.12 app (`com.ziggy.starmail-spikes-s1`). The `embedded` window gets no IPC capability.
 - `cli\` is `s1cli`, the error-matrix harness over gtoken's accounts.
 
 Build, clippy and 31 unit tests pass (synthetic data).

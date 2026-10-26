@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Stardust Mail",
+  "productName": "StarMail",
   "version": "0.1.0",
-  "identifier": "com.ziggy.stardust-mail",
+  "identifier": "com.ziggy.starmail",
   "build": {
     "frontendDist": "../ui"
   },

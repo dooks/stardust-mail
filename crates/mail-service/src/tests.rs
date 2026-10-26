@@ -25,7 +25,7 @@ impl TempDir {
     fn new() -> TempDir {
         static N: AtomicUsize = AtomicUsize::new(0);
         let p = std::env::temp_dir().join(format!(
-            "stardust-mail-svc-{}-{}-{}",
+            "starmail-svc-{}-{}-{}",
             std::process::id(),
             N.fetch_add(1, Ordering::Relaxed),
             mail_model::now_ms()

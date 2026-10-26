@@ -1,4 +1,4 @@
-//! Shared plain types, traits, errors and command DTOs for stardust-mail (PLAN.md §3.1).
+//! Shared plain types, traits, errors and command DTOs for starmail (PLAN.md §3.1).
 //!
 //! This crate performs no I/O. Everything the other crates agree on lives here; Wave 1 packages must not
 //! change these signatures (report a contract problem instead).
@@ -28,7 +28,7 @@ pub use view::{
 };
 
 /// Application identifier; also the directory name under `%LOCALAPPDATA%`.
-pub const APP_ID: &str = "com.ziggy.stardust-mail";
+pub const APP_ID: &str = "com.ziggy.starmail";
 /// Origin of the `gmail-asset` protocol on Windows (WebView2 maps custom schemes to `http://<scheme>.localhost`).
 pub const ASSET_HOST: &str = "http://gmail-asset.localhost";
 /// Raw bodies larger than this are shown but never stored in the cache (5 MiB).

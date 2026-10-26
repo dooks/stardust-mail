@@ -49,7 +49,7 @@ pub(crate) mod testdir {
         pub fn new(tag: &str) -> TestDir {
             static N: AtomicU32 = AtomicU32::new(0);
             let p = std::env::temp_dir().join(format!(
-                "stardust-mail-test-{tag}-{}-{}",
+                "starmail-test-{tag}-{}-{}",
                 std::process::id(),
                 N.fetch_add(1, Ordering::Relaxed)
             ));

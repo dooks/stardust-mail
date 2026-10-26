@@ -1,13 +1,13 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "stardust-mail S1 auth spike",
+  "productName": "starmail S1 auth spike",
   "version": "0.1.0",
-  "identifier": "com.ziggy.stardust-mail-spikes-s1",
+  "identifier": "com.ziggy.starmail-spikes-s1",
   "build": { "frontendDist": "../ui" },
   "app": {
     "withGlobalTauri": true,
     "windows": [
-      { "label": "main", "title": "stardust-mail S1 auth spike", "width": 980, "height": 760 }
+      { "label": "main", "title": "starmail S1 auth spike", "width": 980, "height": 760 }
     ],
     "security": {
       "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'"

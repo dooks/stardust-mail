@@ -352,11 +352,11 @@ pub fn run() {
             }
             let backend = Arc::new(open_backend(&handle)?);
             let accounts = tauri::async_runtime::block_on(backend.accounts()).map_or(0, |a| a.len());
-            tracing::info!(version = env!("CARGO_PKG_VERSION"), accounts, "stardust-mail started");
+            tracing::info!(version = env!("CARGO_PKG_VERSION"), accounts, "starmail started");
             app.manage(backend);
             // Built in code (not tauri.conf.json) so the navigation and new-window hooks can be attached.
             let win = WebviewWindowBuilder::new(app, MAIN_LABEL, WebviewUrl::App("index.html".into()))
-                .title("Stardust Mail")
+                .title("StarMail")
                 .inner_size(1280.0, 800.0)
                 .min_inner_size(900.0, 560.0)
                 .background_color(tauri::window::Color(22, 23, 26, 255))

@@ -1,6 +1,6 @@
 [package]
 name = "mail-model"
-description = "Shared plain types, traits, errors and command DTOs for stardust-mail (no I/O)."
+description = "Shared plain types, traits, errors and command DTOs for starmail (no I/O)."
 version.workspace = true
 edition.workspace = true
 publish.workspace = true
