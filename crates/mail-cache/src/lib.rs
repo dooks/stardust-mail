@@ -844,6 +844,25 @@ impl MailCache for AccountCache {
         Ok(())
     }
 
+    fn meta(&self, id: &MessageId) -> Result<Option<(MessageMeta, bool)>, CacheError> {
+        let g = self.lock()?;
+        let conn = g.as_ref().expect("checked");
+        type Raw = (String, i64, i64, String, Vec<u8>, bool);
+        let raw: Option<Raw> = conn
+            .prepare_cached("SELECT thread_id,internal_date,size_estimate,mime_type,meta,stale FROM msgs WHERE id=?")
+            .map_err(db)?
+            .query_row([id.as_str()], |r| {
+                Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?, r.get::<_, i64>(5)? != 0))
+            })
+            .optional()
+            .map_err(db)?;
+        let Some((t, d, sz, mt, blob, stale)) = raw else {
+            return Ok(None);
+        };
+        let m = self.decode_meta(conn, id.as_str().to_string(), t, d, sz, mt, blob)?;
+        Ok(Some((m, stale)))
+    }
+
     fn label_ids(&self, id: &MessageId) -> Result<Option<Vec<LabelId>>, CacheError> {
         let g = self.lock()?;
         let conn = g.as_ref().expect("checked");

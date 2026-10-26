@@ -437,6 +437,17 @@
       showMessage(m);
     }, function (e) {
       if (mine !== seq.msg) return;
+      if (e && e.detail === "gone") {
+        // Deleted in Gmail since it was cached: calm notice, and drop the row from the current list.
+        if (S.list && S.list.rows) {
+          S.list.rows = S.list.rows.filter(function (r) { return r.id !== id; });
+        }
+        S.openId = null;
+        S.cursor = Math.max(0, Math.min(S.cursor, S.list.rows.length - 1));
+        renderList();
+        showMessage(null, "This message is no longer in Gmail.");
+        return;
+      }
       showMessage(null, errText(e));
     });
   }

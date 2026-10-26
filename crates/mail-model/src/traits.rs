@@ -121,6 +121,9 @@ pub trait MailCache: Send + Sync {
     fn put_body(&self, id: &MessageId, raw: &[u8], now_ms: i64) -> Result<bool, CacheError>;
     /// Record that the body was just opened (LRU / keep-last-7-days rule).
     fn touch_opened(&self, id: &MessageId, now_ms: i64) -> Result<(), CacheError>;
+    /// One cached row's metadata plus its `stale` flag (true after a resync until a fresh `upsert_meta`
+    /// revalidates it). `None` when the row is not cached. Stale rows are returned too.
+    fn meta(&self, id: &MessageId) -> Result<Option<(MessageMeta, bool)>, CacheError>;
     /// Current label ids of a cached row.
     fn label_ids(&self, id: &MessageId) -> Result<Option<Vec<LabelId>>, CacheError>;
     /// Enforce the caps: bodies <= 200 MB (LRU, but keep bodies opened in the last 7 days and the newest 20 INBOX

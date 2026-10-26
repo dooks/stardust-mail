@@ -116,6 +116,10 @@ impl<C: MailCache> MailCache for Tap<'_, C> {
         self.inner.touch_opened(id, now_ms)
     }
 
+    fn meta(&self, id: &MessageId) -> Result<Option<(MessageMeta, bool)>, CacheError> {
+        self.inner.meta(id)
+    }
+
     fn label_ids(&self, id: &MessageId) -> Result<Option<Vec<LabelId>>, CacheError> {
         self.inner.label_ids(id)
     }

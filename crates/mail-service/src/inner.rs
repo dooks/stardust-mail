@@ -12,7 +12,7 @@ use gauth::{Client, LoginHandle, RevokeOutcome, Store, StoredAccount, Tokens};
 use mail_cache::{AccountCache, CacheRoot};
 use mail_model::{
     AccountId, AccountState, AccountView, ApiError, AttachmentInfo, AuthError, CmdError, CmdErrorCode, FolderKind,
-    FolderView, GmailApi, LabelCounts, LabelId, LabelInfo, LabelKind, ListResult, MailCache, MailChanged, MessageId,
+    FolderView, GmailApi, LabelCounts, LabelId, LabelInfo, LabelKind, ListResult, MailCache, MailChanged, MessageId, HistoryEvent, MessageMeta, UpsertMode,
     MessageView, PartId, SaveResult, SignInProgress, SignInStage, SignOutResult, SyncState, SyncStatus, WindowState,
     label, now_ms,
 };
@@ -64,7 +64,7 @@ pub(crate) struct Mem {
 pub(crate) struct Acct {
     pub(crate) id: AccountId,
     pub(crate) email: String,
-    cache: AccountCache,
+    pub(crate) cache: AccountCache,
     api: DynApi,
     tokens: Tokens,
     needs_reauth: AtomicBool,
@@ -216,7 +216,7 @@ impl Inner {
         self.emit(ServiceEvent::SignInProgress(SignInProgress { stage, message }));
     }
 
-    fn get(&self, id: &AccountId) -> Result<Arc<Acct>, CmdError> {
+    pub(crate) fn get(&self, id: &AccountId) -> Result<Arc<Acct>, CmdError> {
         lock(&self.st)
             .accounts
             .iter()
@@ -877,6 +877,45 @@ impl Inner {
         Ok(parsed)
     }
 
+    /// Before opening: a stale row (or an uncached message without a cached body) is revalidated with one
+    /// metadata get. Success refreshes the row (clearing `stale`); a vanished message is removed from the cache and
+    /// reported as `not_found` / `gone`. Offline or any other failure falls back to whatever is cached.
+    /// Returns the best known metadata (for the `internalDate` fallback).
+    async fn revalidate(self: &Arc<Self>, acct: &Arc<Acct>, msg: &MessageId) -> Result<Option<MessageMeta>, CmdError> {
+        let row = acct.cache.meta(msg).ok().flatten();
+        let needs = match &row {
+            Some((_, stale)) => *stale,
+            None => acct.cache.body(msg).ok().flatten().is_none(),
+        };
+        if !needs || acct.needs_reauth() {
+            return Ok(row.map(|(m, _)| m));
+        }
+        let cached = row.is_some();
+        let fetched = match acct.api.metadata_batch(std::slice::from_ref(msg)).await {
+            Ok(mut v) if v.len() == 1 => v.remove(0),
+            Ok(_) => return Ok(row.map(|(m, _)| m)),
+            Err(e) => Err(e),
+        };
+        match fetched {
+            Ok(m) => {
+                let mode = if cached { UpsertMode::Always } else { UpsertMode::Admit };
+                if let Err(e) = acct.cache.upsert_meta(std::slice::from_ref(&m), now_ms(), mode) {
+                    tracing::warn!(error = %e, "revalidated row not cached");
+                }
+                Ok(Some(m))
+            }
+            Err(ApiError::NotFound) => {
+                if let Err(e) = acct.cache.apply_events(&[HistoryEvent::Deleted { id: msg.clone() }]) {
+                    tracing::warn!(error = %e, "gone message not removed from the cache");
+                }
+                lock(&self.parsed).retain(|(k, _)| !(k.0 == acct.id && &k.1 == msg));
+                Err(CmdError::not_found("This message is no longer in Gmail.").with_detail("gone"))
+            }
+            Err(e) if is_auth_dead(&e) => Err(self.api_err(acct, e)),
+            Err(_) => Ok(row.map(|(m, _)| m)),
+        }
+    }
+
     pub(crate) async fn message(
         self: &Arc<Self>,
         id: &AccountId,
@@ -884,6 +923,7 @@ impl Inner {
         show_images: bool,
     ) -> Result<MessageView, CmdError> {
         let acct = self.get(id)?;
+        let known = self.revalidate(&acct, msg).await?;
         let (raw, cached) = self.raw_of(&acct, msg, true).await?;
         let parsed = Arc::new(mail_render::parse(&raw)?);
         self.remember((id.clone(), msg.clone()), parsed.clone());
@@ -892,7 +932,7 @@ impl Inner {
         let hb = mail_render::header_block(&parsed);
         let attachments: Vec<AttachmentInfo> = mail_render::attachments(&parsed);
         let labels = self.label_names(&acct, msg).await;
-        let date = hb.date_ms.or_else(|| internal_date(&acct, msg)).unwrap_or(0);
+        let date = hb.date_ms.or_else(|| known.as_ref().map(|m| m.internal_date_ms)).unwrap_or(0);
         Ok(MessageView {
             id: msg.clone(),
             subject: hb.subject,
@@ -964,11 +1004,6 @@ impl Inner {
     }
 }
 
-/// `internalDate` of a cached row, for messages without a usable `Date` header.
-fn internal_date(acct: &Acct, msg: &MessageId) -> Option<i64> {
-    let all = LabelId::new(label::ALL_MAIL);
-    acct.cache.rows(&all, None, 500, true).ok()?.into_iter().find(|m| &m.id == msg).map(|m| m.internal_date_ms)
-}
 
 /// The per-account poll task: poll now (the cold fill of a new account), then wait for the timer, a manual
 /// trigger, a reschedule or a stop.
