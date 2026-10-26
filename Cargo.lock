@@ -1550,6 +1550,7 @@ name = "gmail-ro"
 version = "0.1.0"
 dependencies = [
  "mail-model",
+ "mail-render",
  "mail-service",
  "serde",
  "serde_json",
@@ -1557,6 +1558,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-dialog",
  "tauri-plugin-opener",
+ "tokio",
  "tracing",
 ]
 

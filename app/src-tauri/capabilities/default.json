@@ -1,10 +1,9 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Main window only. The message iframe is sandboxed and scriptless, so it never reaches IPC. Dialogs and the opener plugin are driven from Rust.",
+  "description": "Main window only. The message iframe is sandboxed and scriptless, so it never reaches IPC. The save dialog and the opener plugin are driven from Rust (plugin permissions only gate calls from JS), so no dialog or opener permission is granted. core:default covers event listening.",
   "windows": ["main"],
   "permissions": [
-    "core:default",
-    "dialog:allow-save"
+    "core:default"
   ]
 }

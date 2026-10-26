@@ -10,7 +10,7 @@
     "withGlobalTauri": true,
     "windows": [],
     "security": {
-      "csp": null
+      "csp": "default-src 'none'; script-src 'self'; style-src-elem 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; img-src 'self' data: http://gmail-asset.localhost https: http:; font-src 'self'; connect-src ipc: http://ipc.localhost; frame-src about:; object-src 'none'; base-uri 'none'; form-action 'none'"
     }
   },
   "bundle": {
