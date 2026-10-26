@@ -356,7 +356,7 @@ pub fn run() {
             app.manage(backend);
             // Built in code (not tauri.conf.json) so the navigation and new-window hooks can be attached.
             let win = WebviewWindowBuilder::new(app, MAIN_LABEL, WebviewUrl::App("index.html".into()))
-                .title("stardust-mail")
+                .title("Stardust Mail")
                 .inner_size(1280.0, 800.0)
                 .min_inner_size(900.0, 560.0)
                 .background_color(tauri::window::Color(22, 23, 26, 255))
