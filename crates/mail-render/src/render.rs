@@ -28,6 +28,10 @@ pub struct Rendered {
     pub remote_images_blocked: u32,
 }
 
+/// Largest page handed to the iframe; bigger messages fall back to plain text (or a notice).
+const MAX_PAGE_BYTES: usize = 2 * 1024 * 1024;
+const TOO_LARGE_NOTICE: &str = "This message is too large to display; save it or open it in Gmail.";
+
 /// CSP for the iframe page. Remote images only in the per-message "images allowed" variant.
 fn csp(images: ImagePolicy) -> String {
     let img = match images {
@@ -75,6 +79,11 @@ pub fn render(parsed: &Parsed, account: &AccountId, msg: &MessageId, images: Ima
         Arc::new(move |id: &str| cids.get(id).map(|p| url_of(*p)))
     };
 
+    // Pathologically nested HTML makes the HTML parser / serializer quadratic (minutes of CPU): don't sanitize it.
+    if parsed.html.as_deref().is_some_and(|h| max_tag_depth(h) > MAX_TAG_DEPTH) {
+        return Rendered { page: page(&too_large_fragment(parsed, &url_of), images), remote_images_blocked: 0 };
+    }
+
     let (fragment, blocked) = match (&parsed.html, &parsed.text) {
         (Some(h), _) => {
             let (f, r) = sanitize::sanitize(h, images, resolver);
@@ -95,7 +104,80 @@ pub fn render(parsed: &Parsed, account: &AccountId, msg: &MessageId, images: Ima
         }
         (None, None) => ("<div class=\"plain\">(no displayable body)</div>".to_string(), 0),
     };
-    Rendered { page: page(&fragment, images), remote_images_blocked: u32::try_from(blocked).unwrap_or(u32::MAX) }
+    let full = page(&fragment, images);
+    if full.len() <= MAX_PAGE_BYTES {
+        return Rendered { page: full, remote_images_blocked: u32::try_from(blocked).unwrap_or(u32::MAX) };
+    }
+    drop(full);
+    Rendered { page: page(&too_large_fragment(parsed, &url_of), images), remote_images_blocked: 0 }
+}
+
+/// Deepest element nesting a message may have before it is shown as plain text. Real mail stays well below 100.
+const MAX_TAG_DEPTH: usize = 400;
+
+/// Cheap O(n) upper-ish estimate of the element nesting depth: every non-void start tag counts as open until a
+/// close tag arrives (so unclosed `<div>`/`<b>` runs count as nested, as an HTML parser would nest them).
+fn max_tag_depth(html: &str) -> usize {
+    const VOID: &[&str] =
+        &["br", "hr", "img", "input", "meta", "link", "area", "base", "col", "embed", "source", "track", "wbr", "param"];
+    let b = html.as_bytes();
+    let (mut depth, mut max, mut i) = (0usize, 0usize, 0usize);
+    while i < b.len() {
+        if b[i] != b'<' {
+            i += 1;
+            continue;
+        }
+        if b[i..].starts_with(b"<!--") {
+            i = html[i + 4..].find("-->").map_or(b.len(), |e| i + 4 + e + 3);
+            continue;
+        }
+        let closing = b.get(i + 1) == Some(&b'/');
+        let name_start = i + 1 + usize::from(closing);
+        let mut j = name_start;
+        while j < b.len() && (b[j].is_ascii_alphanumeric() || b[j] == b'-') {
+            j += 1;
+        }
+        i = j.max(i + 1);
+        if j == name_start {
+            continue; // `<!doctype`, `<?`, `< `, or a lone `<`
+        }
+        if closing {
+            depth = depth.saturating_sub(1);
+            continue;
+        }
+        let name = html[name_start..j].to_ascii_lowercase();
+        let Some(end) = html[j..].find('>').map(|e| j + e) else {
+            break; // unterminated tag: nothing more to count (and no repeated scans to the end)
+        };
+        if VOID.contains(&name.as_str()) || b[..end].last() == Some(&b'/') {
+            i = end.max(i);
+            continue;
+        }
+        depth += 1;
+        max = max.max(depth);
+        i = end.max(i);
+    }
+    max
+}
+
+/// Plain-text rendering of the text body for an oversized message, or a short notice when there is no (small
+/// enough) text body.
+fn too_large_fragment(parsed: &Parsed, url_of: &impl Fn(PartId) -> String) -> String {
+    let mut f = String::new();
+    if parsed.text.is_some() {
+        for item in &parsed.text_items {
+            match item {
+                BodyItem::Text(t) => f.push_str(&text::text_to_html(t)),
+                BodyItem::Image(id) => {
+                    f.push_str(&format!("<div class=\"plain\"><img src=\"{}\" alt=\"\"></div>", text::escape(&url_of(*id))));
+                }
+            }
+        }
+    }
+    if f.is_empty() || f.len() > MAX_PAGE_BYTES {
+        f = format!("<div class=\"plain\">{TOO_LARGE_NOTICE}</div>");
+    }
+    f
 }
 
 fn enc_seg(s: &str) -> String {

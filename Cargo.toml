@@ -29,6 +29,7 @@ gmail-api = { path = "crates/gmail-api" }
 mail-cache = { path = "crates/mail-cache" }
 mail-sync = { path = "crates/mail-sync" }
 mail-render = { path = "crates/mail-render" }
+proptest = { version = "1", default-features = false, features = ["std"] }
 mail-service = { path = "crates/mail-service" }
 
 # Common
