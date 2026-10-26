@@ -1,66 +1,13 @@
 //! The `gmail-asset` protocol: `http://gmail-asset.localhost/<accountId>/<messageId>/<partId>`.
 //!
-//! `mail_render::parse_asset_path` and `asset_headers` are still `todo!()` in this branch, so the same rules are
-//! applied locally. WP-I: once mail-render lands, replace `parse_asset_path` here with the crate's and delete the
-//! local copy (the tests below pin the rules both must satisfy). The real `Service::asset` already returns
-//! `mail_render::asset_headers`; the local `asset_headers` is used by the mock only.
+//! The path and header rules live in `mail-render` (one source of truth); the tests below pin them from the
+//! host's side.
 
-use mail_model::{AccountId, MessageId, PartId};
 use tauri::http::{Response, StatusCode, header};
 
-/// Longest accepted account (sub) / message id segment.
-const MAX_ACCOUNT: usize = 128;
-const MAX_MESSAGE: usize = 64;
-
-fn segment_ok(s: &str, max: usize) -> bool {
-    !s.is_empty()
-        && s.len() <= max
-        && !s.starts_with('.')
-        && s.bytes().all(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_' | b'.' | b'@' | b'+'))
-}
-
-/// Parse a request path (`/<account>/<message>/<part>`). Exactly three segments from `[A-Za-z0-9_.@+-]`, none
-/// starting with a dot, and a decimal part index of at most 9 digits. Nothing is taken from mail content.
-pub fn parse_asset_path(path: &str) -> Option<(AccountId, MessageId, PartId)> {
-    let mut it = path.strip_prefix('/').unwrap_or(path).split('/');
-    let (a, m, p) = (it.next()?, it.next()?, it.next()?);
-    if it.next().is_some() {
-        return None;
-    }
-    if !segment_ok(a, MAX_ACCOUNT) || !segment_ok(m, MAX_MESSAGE) {
-        return None;
-    }
-    if p.is_empty() || p.len() > 9 || !p.bytes().all(|b| b.is_ascii_digit()) {
-        return None;
-    }
-    Some((AccountId::new(a), MessageId::new(m), PartId(p.parse().ok()?)))
-}
-
 #[cfg(any(feature = "mock", test))]
-/// Raster formats that may be displayed inline; everything else is served as a download.
-pub fn inline_safe_mime(mime: &str) -> bool {
-    matches!(
-        mime.trim().to_ascii_lowercase().as_str(),
-        "image/png" | "image/jpeg" | "image/jpg" | "image/gif" | "image/webp" | "image/bmp" | "image/x-icon"
-    )
-}
-
-#[cfg(any(feature = "mock", test))]
-/// Headers equivalent to `mail_render::asset_headers`: inline-safe images keep their type; anything else is
-/// `application/octet-stream` + `attachment`. Always `nosniff` and a sandboxing CSP.
-pub fn asset_headers(mime: &str) -> Vec<(&'static str, String)> {
-    let mut h = Vec::new();
-    if inline_safe_mime(mime) {
-        h.push(("Content-Type", mime.trim().to_ascii_lowercase()));
-    } else {
-        h.push(("Content-Type", "application/octet-stream".to_string()));
-        h.push(("Content-Disposition", "attachment".to_string()));
-    }
-    h.push(("Cache-Control", "private, max-age=3600".to_string()));
-    h.push(("X-Content-Type-Options", "nosniff".to_string()));
-    h.push(("Content-Security-Policy", "default-src 'none'; sandbox".to_string()));
-    h
-}
+pub use mail_render::asset_headers;
+pub use mail_render::parse_asset_path;
 
 /// A bodiless response with a status (errors never carry details).
 pub fn plain(status: StatusCode) -> Response<Vec<u8>> {
@@ -84,6 +31,7 @@ pub fn ok(bytes: Vec<u8>, headers: Vec<(&'static str, String)>) -> Response<Vec<
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mail_model::PartId;
 
     #[test]
     fn good_paths_parse() {
