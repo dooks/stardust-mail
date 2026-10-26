@@ -467,6 +467,9 @@ mod tests {
         fn touch_opened(&self, _id: &MessageId, _now: i64) -> Result<(), CacheError> {
             Ok(())
         }
+        fn meta(&self, _id: &MessageId) -> Result<Option<(MessageMeta, bool)>, CacheError> {
+            Ok(None)
+        }
         fn label_ids(&self, _id: &MessageId) -> Result<Option<Vec<LabelId>>, CacheError> {
             Ok(None)
         }

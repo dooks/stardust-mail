@@ -572,3 +572,25 @@ fn bench_1000_rows() {
     }
     println!("get 200 bodies: {:?}", t0.elapsed());
 }
+
+#[test]
+fn meta_roundtrip_with_stale_flag() {
+    let (_t, _r, c) = s4_store();
+    assert!(c.meta(&mid("zzz")).unwrap().is_none());
+    let (m, stale) = c.meta(&mid("c")).unwrap().unwrap();
+    assert!(!stale);
+    assert_eq!(m, meta("c", 300, &["INBOX", "STARRED"]));
+    // Resync marks it stale; meta() still returns it, flagged.
+    c.mark_all_stale_and_drop_windows().unwrap();
+    let (m, stale) = c.meta(&mid("c")).unwrap().unwrap();
+    assert!(stale);
+    assert_eq!(m.internal_date_ms, 300);
+    // A fresh upsert clears the flag.
+    c.upsert_meta(&[meta("c", 300, &["INBOX"])], 9, UpsertMode::Always).unwrap();
+    let (m, stale) = c.meta(&mid("c")).unwrap().unwrap();
+    assert!(!stale);
+    assert_eq!(m.label_ids, lab(&["INBOX"]));
+    // A deleted row is gone.
+    c.apply_events(&[HistoryEvent::Deleted { id: mid("c") }]).unwrap();
+    assert!(c.meta(&mid("c")).unwrap().is_none());
+}

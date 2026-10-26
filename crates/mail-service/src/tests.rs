@@ -638,6 +638,67 @@ async fn message_renders_from_the_cached_body() {
     env.svc.shutdown().await;
 }
 
+fn mark_stale(env: &Env) {
+    use mail_model::MailCache;
+    let acct = env.svc.inner.get(&id("acc-a")).unwrap();
+    assert!(acct.cache.mark_all_stale_and_drop_windows().unwrap() > 0);
+}
+
+fn cached_meta(env: &Env, m: &str) -> Option<(MessageMeta, bool)> {
+    use mail_model::MailCache;
+    env.svc.inner.get(&id("acc-a")).unwrap().cache.meta(&MessageId::new(m)).unwrap()
+}
+
+#[tokio::test]
+async fn stale_row_is_revalidated_then_rendered() {
+    let env = start(&["acc-a"], true, "http://127.0.0.1:1/revoke", slow_cadence()).await;
+    wait_ready(&env, "acc-a").await;
+    let fake = env.fake("acc-a");
+    fake.raws.lock().unwrap().insert("m2".into(), mail_render::fixtures::synthetic("alt").unwrap());
+    assert!(!cached_meta(&env, "m2").unwrap().1);
+    mark_stale(&env);
+    assert!(cached_meta(&env, "m2").unwrap().1);
+
+    let v = env.svc.message(id("acc-a"), MessageId::new("m2"), false).await.unwrap();
+    assert!(v.page.contains("Content-Security-Policy"));
+    assert!(!cached_meta(&env, "m2").unwrap().1, "revalidation clears stale");
+    env.svc.shutdown().await;
+}
+
+#[tokio::test]
+async fn deleted_message_is_gone_and_removed_from_the_cache() {
+    let env = start(&["acc-a"], true, "http://127.0.0.1:1/revoke", slow_cadence()).await;
+    wait_ready(&env, "acc-a").await;
+    let fake = env.fake("acc-a");
+    fake.raws.lock().unwrap().insert("m2".into(), mail_render::fixtures::synthetic("alt").unwrap());
+    env.svc.message(id("acc-a"), MessageId::new("m2"), false).await.unwrap();
+    mark_stale(&env);
+    fake.msgs.lock().unwrap().retain(|m| m.id.as_str() != "m2");
+
+    let err = env.svc.message(id("acc-a"), MessageId::new("m2"), false).await.unwrap_err();
+    assert_eq!(err.code, mail_model::CmdErrorCode::NotFound);
+    assert_eq!(err.detail.as_deref(), Some("gone"));
+    assert_eq!(err.message, "This message is no longer in Gmail.");
+    assert!(cached_meta(&env, "m2").is_none());
+    env.svc.shutdown().await;
+}
+
+#[tokio::test]
+async fn offline_stale_row_still_opens_from_the_cache() {
+    let env = start(&["acc-a"], true, "http://127.0.0.1:1/revoke", slow_cadence()).await;
+    wait_ready(&env, "acc-a").await;
+    let fake = env.fake("acc-a");
+    fake.raws.lock().unwrap().insert("m2".into(), mail_render::fixtures::synthetic("alt").unwrap());
+    env.svc.message(id("acc-a"), MessageId::new("m2"), false).await.unwrap();
+    mark_stale(&env);
+    fake.set_fail(Some(ApiError::Offline("no network".into())));
+
+    let v = env.svc.message(id("acc-a"), MessageId::new("m2"), false).await.unwrap();
+    assert!(v.cached);
+    assert!(cached_meta(&env, "m2").unwrap().1, "still stale: nothing could revalidate it");
+    env.svc.shutdown().await;
+}
+
 #[tokio::test]
 async fn assets_and_attachment_saves_come_from_the_parsed_message() {
     let env = start(&["acc-a"], true, "http://127.0.0.1:1/revoke", slow_cadence()).await;
