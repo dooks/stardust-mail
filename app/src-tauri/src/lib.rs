@@ -9,6 +9,7 @@
 //! Privacy: nothing here logs addresses, subjects, bodies, file names or paths, only ids, counts and sizes.
 
 mod assets;
+mod logging;
 #[cfg(feature = "mock")]
 mod mock;
 mod save;
@@ -156,11 +157,37 @@ fn app_data_dir(app: &AppHandle) -> Result<std::path::PathBuf, CmdError> {
 // ---------------------------------------------------------------------------------------------
 
 /// Forwards service events (`mail-changed`, `sync-status`, `account-changed`, `sign-in-progress`) to the UI.
-struct TauriSink(AppHandle);
+/// Also logs sign-in progress and account state changes (ids and states only, never the address).
+struct TauriSink {
+    app: AppHandle,
+    /// Last logged state per account, so unread-count updates are not logged as state changes.
+    states: std::sync::Mutex<std::collections::HashMap<String, String>>,
+}
+
+impl TauriSink {
+    fn new(app: AppHandle) -> Self {
+        Self { app, states: Default::default() }
+    }
+
+    fn log(&self, event: &ServiceEvent) {
+        match event {
+            ServiceEvent::SignInProgress(p) => tracing::info!(stage = ?p.stage, "sign-in progress"),
+            ServiceEvent::AccountChanged(v) => {
+                let (id, state) = (format!("{:?}", v.id), format!("{:?}", v.state));
+                let mut g = self.states.lock().unwrap_or_else(|p| p.into_inner());
+                if g.insert(id.clone(), state.clone()).as_deref() != Some(state.as_str()) {
+                    tracing::info!(account = %id, state = %state, "account state");
+                }
+            }
+            _ => {}
+        }
+    }
+}
 
 impl EventSink for TauriSink {
     fn emit(&self, event: ServiceEvent) {
-        if let Err(e) = self.0.emit(event.name(), event.payload()) {
+        self.log(&event);
+        if let Err(e) = self.app.emit(event.name(), event.payload()) {
             tracing::warn!(event = event.name(), error = %e, "could not emit event");
         }
     }
@@ -277,7 +304,7 @@ async fn serve_asset(svc: Arc<Backend>, req: Request<Vec<u8>>) -> Response<Vec<u
 /// `Service::open` / `MockService::open` have the same signature.
 fn open_backend(app: &AppHandle) -> Result<Backend, Box<dyn std::error::Error>> {
     let dir = app.path().app_local_data_dir()?;
-    let sink: Arc<dyn EventSink> = Arc::new(TauriSink(app.clone()));
+    let sink: Arc<dyn EventSink> = Arc::new(TauriSink::new(app.clone()));
     // Setup runs before the event loop; block until the backend is open.
     tauri::async_runtime::block_on(Backend::open(dir, sink)).map_err(|e| e.message.into())
 }
@@ -317,7 +344,15 @@ pub fn run() {
         })
         .setup(|app| {
             let handle = app.handle().clone();
+            // Logging first, so the backend's own startup lines are captured. A log failure never stops the app.
+            let log_dir = app_data_dir(&handle).map(|d| d.join("logs"));
+            match log_dir.map_err(|e| e.message).and_then(|d| logging::init(&d)) {
+                Ok(()) => {}
+                Err(e) => eprintln!("logging disabled: {e}"),
+            }
             let backend = Arc::new(open_backend(&handle)?);
+            let accounts = tauri::async_runtime::block_on(backend.accounts()).map_or(0, |a| a.len());
+            tracing::info!(version = env!("CARGO_PKG_VERSION"), accounts, "gmail-ro started");
             app.manage(backend);
             // Built in code (not tauri.conf.json) so the navigation and new-window hooks can be attached.
             let win = WebviewWindowBuilder::new(app, MAIN_LABEL, WebviewUrl::App("index.html".into()))
