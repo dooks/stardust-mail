@@ -14,7 +14,7 @@
     folderId: "INBOX",
     folderByAccount: {},
     list: { rows: [], more: false, endOfCache: false },
-    cursor: -1,        // keyboard/selected row index
+    cursor: -1,        // selected row index
     openId: null,      // message shown in the reader
     msg: null,
     status: {},        // accountId -> SyncStatus
@@ -421,15 +421,6 @@
     ul.scrollTop = scroll;
   }
 
-  function moveCursor(delta) {
-    var n = S.list.rows.length;
-    if (!n) return;
-    S.cursor = Math.max(0, Math.min(n - 1, (S.cursor < 0 ? (delta > 0 ? -1 : n) : S.cursor) + delta));
-    renderList();
-    var cur = $("messages").querySelector(".cursor");
-    if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: "nearest" });
-  }
-
   // ---------- reader ----------
   function openRow(i) {
     var r = S.list.rows[i];
@@ -575,7 +566,7 @@
     });
   }
 
-  // ---------- events & keyboard ----------
+  // ---------- events ----------
   function wireEvents() {
     if (!listen) return;
     listen("mail-changed", function (ev) {
@@ -607,22 +598,10 @@
     });
   }
 
-  function typing(t) {
-    return t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
-  }
+  // No keyboard shortcuts by design (user preference); Escape only closes an open menu.
   document.addEventListener("click", function () { closeMenu(); });
   document.addEventListener("keydown", function (ev) {
-    if (ev.key === "Escape") { closeMenu(); return; }
-    if (modalEl || typing(ev.target) || ev.ctrlKey || ev.metaKey || ev.altKey) return;
-    var onButton = ev.target && ev.target.tagName === "BUTTON";
-    if (ev.key === "ArrowDown") { ev.preventDefault(); moveCursor(1); }
-    else if (ev.key === "ArrowUp") { ev.preventDefault(); moveCursor(-1); }
-    else if (ev.key === "Enter" && !onButton) { if (S.cursor >= 0) { ev.preventDefault(); openRow(S.cursor); } }
-    else if (ev.key === "r" || ev.key === "R") { doRefresh(); }
-    else if (ev.key >= "1" && ev.key <= "9") {
-      var a = S.accounts[Number(ev.key) - 1];
-      if (a) selectAccount(a.id);
-    }
+    if (ev.key === "Escape") closeMenu();
   });
 
   // ---------- init ----------

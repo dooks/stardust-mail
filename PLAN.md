@@ -370,7 +370,7 @@ Start each agent with: "Read `CLAUDE.md`, `PLAN.md` §1, §3 and your WP section
   - Missing-scope error: an explanation and a Try again button.
   - `needsReauth`: a per-account banner with a "Sign in again" button.
 - Sign out sits in the account context menu, behind a confirm dialog that explains it also removes the app's access at Google.
-- Keyboard: ↑/↓ moves through the list, Enter opens, R refreshes, 1–9 switches account.
+- **No keyboard shortcuts** (user decision). Escape only closes an open menu.
 - No frameworks. All text inserted via `textContent` (never innerHTML) except the srcdoc.
 
 ---
