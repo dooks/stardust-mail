@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    gmail_ro_lib::run()
+    stardust_mail_lib::run()
 }

@@ -5,7 +5,7 @@
 Crate: `spikes\s3-render\`.
 - Library `s3render` and bin `s3`, with commands fetch, stats, render, render-all, time and verify-att.
 - Modules: `parse`, `auth`, `text`, `sanitize`, `render`, `fetch`, `compare` and `stats`.
-- `harness\` is a Tauri 2.12 test app (`com.ziggy.gmail-ro-spikes-s3`).
+- `harness\` is a Tauri 2.12 test app (`com.ziggy.stardust-mail-spikes-s3`).
 - Fixtures in `fixtures\` are all synthetic, including `hostile.html`.
 - 25 unit and 8 integration tests pass, and clippy is clean.
 - `out\` (git-ignored) holds the real sample.

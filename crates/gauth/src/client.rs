@@ -47,12 +47,12 @@ impl fmt::Debug for Client {
     }
 }
 
-/// `%LOCALAPPDATA%\com.ziggy.gmail-ro` (falls back to the current directory if the variable is unset).
+/// `%LOCALAPPDATA%\com.ziggy.stardust-mail` (falls back to the current directory if the variable is unset).
 pub fn data_dir() -> PathBuf {
     let base = std::env::var_os("LOCALAPPDATA")
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from("."));
-    base.join("com.ziggy.gmail-ro")
+    base.join("com.ziggy.stardust-mail")
 }
 
 /// `<data_dir>\oauth-client.json`.
@@ -120,7 +120,7 @@ pub(crate) fn http() -> reqwest::Client {
     C.get_or_init(|| {
         reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
-            .user_agent("gmail-ro/0.1")
+            .user_agent("stardust-mail/0.1")
             .build()
             .expect("reqwest client")
     })

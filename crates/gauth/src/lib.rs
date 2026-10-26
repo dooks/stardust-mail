@@ -1,4 +1,4 @@
-//! Google OAuth for gmail-ro (PLAN §3.2, WP-A): loopback + PKCE sign-in in the system browser, a DPAPI token
+//! Google OAuth for stardust-mail (PLAN §3.2, WP-A): loopback + PKCE sign-in in the system browser, a DPAPI token
 //! store, a per-account access-token cache, revoke and tokeninfo.
 //!
 //! Privacy: never log tokens, authorization codes, `state`, verifiers or Authorization headers.
@@ -22,4 +22,4 @@ pub const SCOPES_IDENTITY: [&str; 2] = ["openid", "email"];
 /// How long a pending sign-in waits for the redirect (5 minutes).
 pub const LOGIN_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(300);
 /// DPAPI entropy of token files.
-pub const TOKEN_ENTROPY: &[u8] = b"gmail-ro-token";
+pub const TOKEN_ENTROPY: &[u8] = b"stardust-mail-token";

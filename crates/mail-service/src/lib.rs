@@ -125,7 +125,7 @@ pub struct Service {
 impl Service {
     /// Load accounts from `<data_dir>\accounts` (skipping bad files), open caches under `<data_dir>\cache`, sweep
     /// leftover deletions, and start one poll task per signed-in account (driven by `Cadence`, `PollGate` and the
-    /// window state). `data_dir` is `%LOCALAPPDATA%\com.ziggy.gmail-ro`; the OAuth client is read from
+    /// window state). `data_dir` is `%LOCALAPPDATA%\com.ziggy.stardust-mail`; the OAuth client is read from
     /// `<data_dir>\oauth-client.json` (a missing file only makes sign-in fail with a config error, and no accounts
     /// are loaded). Must be called inside a tokio runtime.
     pub async fn open(data_dir: PathBuf, sink: Arc<dyn EventSink>) -> Result<Service, CmdError> {

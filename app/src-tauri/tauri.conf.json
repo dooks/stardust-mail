@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "gmail-ro",
+  "productName": "stardust-mail",
   "version": "0.1.0",
-  "identifier": "com.ziggy.gmail-ro",
+  "identifier": "com.ziggy.stardust-mail",
   "build": {
     "frontendDist": "../ui"
   },

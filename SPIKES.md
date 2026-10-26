@@ -1,4 +1,4 @@
-# gmail-ro: stack and investigative spikes
+# stardust-mail: stack and investigative spikes
 
 Step 1 of the workflow (see `CLAUDE.md`). This file fixes the stack and gives one self-contained brief per spike. A Sonnet agent should need only `CLAUDE.md`, this file, and its own spike section.
 
@@ -12,11 +12,11 @@ Step 1 of the workflow (see `CLAUDE.md`). This file fixes the stack and gives on
 | Mail access | **Gmail REST API v1** (`gmail.googleapis.com`) via plain `reqwest` 0.12 (rustls) + serde types for the ~6 endpoints we use | The API has a **server-enforced read-only scope** (`gmail.readonly`). IMAP has none: XOAUTH2 IMAP needs the full `https://mail.google.com/` scope, and app passwords also give full access, so read-only would only be a client-side promise. The generated `google-gmail1` crate is heavy and adds nothing for 6 endpoints. |
 | Auth | **OAuth 2.0 for installed apps**: system browser + loopback redirect (`http://127.0.0.1:<ephemeral>`) + PKCE (S256) + `state`. One OAuth client (the user's own Google Cloud project, "Desktop app" type) serves every account. | Google blocks OAuth inside embedded webviews (`disallowed_useragent`), so unlike icloud-notes the login cannot run in a Tauri window. The OOB / copy-paste flow is retired. |
 | Scopes | `https://www.googleapis.com/auth/gmail.readonly` + `openid email` | Least privilege that still gives bodies. `gmail.metadata` has no bodies, so it's not enough. |
-| Secrets | Refresh token per account, **DPAPI** (CurrentUser + app entropy) in `%LOCALAPPDATA%\com.ziggy.gmail-ro\accounts\<sub>.dpapi`. Access tokens live in memory only. | Port `icloud-session`'s `protect`/`unprotect`. |
+| Secrets | Refresh token per account, **DPAPI** (CurrentUser + app entropy) in `%LOCALAPPDATA%\com.ziggy.stardust-mail\accounts\<sub>.dpapi`. Access tokens live in memory only. | Port `icloud-session`'s `protect`/`unprotect`. |
 | MIME | `format=raw` + the **`mail-parser`** crate (to be confirmed by S3) | Handles charsets, RFC 2047 encoded words, nested multiparts, and `cid:` parts in one pass. The Gmail `payload` tree is the fallback. |
 | HTML mail | Sanitize (**`ammonia`**), then show it in a sandboxed `<iframe srcdoc>` (no `allow-scripts`) with a strict CSP. Remote images are **blocked by default**. `cid:` images come via a custom protocol `http://gmail-asset.localhost/…`. Links open in the OS browser after a scheme check. | Same isolation model as icloud-notes spike 8. Email HTML is arbitrary, though, so here we must sanitize (that renderer generated its own HTML instead). |
 | Local data | **Fetch-through SQLite cache** (rusqlite) for list rows and opened messages, so they stay readable offline. Encryption at rest and the storage shape are decided by S4. | User requirement: offline reading of anything already fetched. Freshness still comes first: show the cache, then refresh. |
-| Identity | App id `com.ziggy.gmail-ro`. Spikes use `com.ziggy.gmail-ro-spikes` so they never touch the real app's data. | |
+| Identity | App id `com.ziggy.stardust-mail`. Spikes use `com.ziggy.stardust-mail-spikes` so they never touch the real app's data. | |
 
 **Rejected:**
 - **IMAP + app passwords.** Needs no Cloud project, but gives full mailbox access, is not read-only on the server side, and Google keeps narrowing it. Keep it as the fallback only if S1 shows the API route is unworkable. (All accounts are personal @gmail.com, so no Workspace admin policy applies.)
@@ -52,8 +52,8 @@ Order: **S0 runs first and alone, with the user present** (about 30 min). Then *
 
 User steps (the agent guides; the agent never sees the client secret's value):
 1. Create a Google Cloud project (free) at console.cloud.google.com. Enable **Gmail API**.
-2. Set up the OAuth consent screen: User type **External**, app name "gmail-ro (personal)". Add the scopes `gmail.readonly`, `openid` and `email`. Add every Gmail address as a **test user**. (S1 decides between Testing and Production later. Start in Testing.)
-3. Create credentials → OAuth client ID → **Desktop app**. Download the JSON to `%LOCALAPPDATA%\com.ziggy.gmail-ro-spikes\oauth-client.json`. That's outside the repo, and never pasted in chat.
+2. Set up the OAuth consent screen: User type **External**, app name "stardust-mail (personal)". Add the scopes `gmail.readonly`, `openid` and `email`. Add every Gmail address as a **test user**. (S1 decides between Testing and Production later. Start in Testing.)
+3. Create credentials → OAuth client ID → **Desktop app**. Download the JSON to `%LOCALAPPDATA%\com.ziggy.stardust-mail-spikes\oauth-client.json`. That's outside the repo, and never pasted in chat.
 
 Agent builds `spikes\s0-token\` as a cargo workspace with:
 - lib `gtoken`:
@@ -72,7 +72,7 @@ Done when: the user has run `gtoken login` for **at least two accounts**, and `g
 
 **Goal:** the production-ready sign-in design for several accounts, inside Tauri.
 
-Build `spikes\s1-auth\` as a minimal Tauri 2.12 app (identifier `com.ziggy.gmail-ro-spikes-s1`, own token store, **not** S0's). It has a "Add account" button, a list of accounts, and per account a "Check" button (refresh + `getProfile`) and a "Remove" button (local delete).
+Build `spikes\s1-auth\` as a minimal Tauri 2.12 app (identifier `com.ziggy.stardust-mail-spikes-s1`, own token store, **not** S0's). It has a "Add account" button, a list of accounts, and per account a "Check" button (refresh + `getProfile`) and a "Remove" button (local delete).
 
 Questions:
 1. **Flow inside Tauri:** spawn the loopback listener from a command, open the system browser, receive the redirect, then show a "you can close this tab" page and bring the app window back to the front. How does it handle a cancelled consent, a closed tab (timeout), and a second "Add account" while one is still pending?

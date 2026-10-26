@@ -17,7 +17,7 @@ use crate::{BATCH_PATH, DEFAULT_BASE, FALLBACK_CONCURRENCY};
 
 /// Subject etc. requested for every metadata fetch.
 const META_HEADERS: [&str; 4] = ["From", "To", "Subject", "Date"];
-const BATCH_BOUNDARY: &str = "gmail_ro_batch_7f3a9c21";
+const BATCH_BOUNDARY: &str = "stardust_mail_batch_7f3a9c21";
 
 /// Gmail client for ONE account, generic over where its bearer tokens come from (`gauth::Tokens` in the app, a
 /// fake in tests).

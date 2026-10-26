@@ -1,4 +1,4 @@
-//! `gtoken`: Gmail OAuth for the gmail-ro spikes.
+//! `gtoken`: Gmail OAuth for the stardust-mail spikes.
 //!
 //! * [`login`] runs the installed-app flow (system browser, loopback redirect, PKCE S256, `state`).
 //! * Refresh tokens are stored DPAPI-encrypted, one file per Google account (`sub`).
@@ -21,7 +21,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 
-const APP_DIR: &str = "com.ziggy.gmail-ro-spikes";
+const APP_DIR: &str = "com.ziggy.stardust-mail-spikes";
 const TOKEN_ENDPOINT: &str = "https://oauth2.googleapis.com/token";
 const PROFILE_ENDPOINT: &str = "https://gmail.googleapis.com/gmail/v1/users/me/profile";
 const LOGIN_TIMEOUT: Duration = Duration::from_secs(300);
@@ -102,7 +102,7 @@ impl std::fmt::Debug for AccessToken {
 // Paths, client file, HTTP
 // ---------------------------------------------------------------------------------------------
 
-/// `%LOCALAPPDATA%\com.ziggy.gmail-ro-spikes`.
+/// `%LOCALAPPDATA%\com.ziggy.stardust-mail-spikes`.
 pub fn data_dir() -> PathBuf {
     let base = std::env::var_os("LOCALAPPDATA").map(PathBuf::from).unwrap_or_else(std::env::temp_dir);
     base.join(APP_DIR)
@@ -144,7 +144,7 @@ pub fn http() -> reqwest::Client {
     C.get_or_init(|| {
         reqwest::Client::builder()
             .timeout(Duration::from_secs(30))
-            .user_agent("gmail-ro-spikes/0.1")
+            .user_agent("stardust-mail-spikes/0.1")
             .build()
             .expect("reqwest client")
     })
@@ -460,7 +460,7 @@ async fn read_head(sock: &mut TcpStream) -> Option<String> {
 
 async fn respond(sock: &mut TcpStream, status: &str, msg: &str) {
     let body = format!(
-        "<!doctype html><meta charset=utf-8><title>gmail-ro</title>\
+        "<!doctype html><meta charset=utf-8><title>stardust-mail</title>\
          <body style=\"font-family:system-ui;margin:3rem\"><p>{msg}</p></body>"
     );
     let resp = format!(

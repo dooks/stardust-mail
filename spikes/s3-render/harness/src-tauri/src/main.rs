@@ -353,7 +353,7 @@ fn main() {
             let st_win = st2.clone();
             let _ = &st_win;
             WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
-                .title("gmail-ro S3 harness")
+                .title("stardust-mail S3 harness")
                 .inner_size(1280.0, 860.0)
                 .on_navigation(move |url| {
                     let ok = matches!(url.scheme(), "tauri" | "about") || url.host_str() == Some("tauri.localhost");

@@ -25,8 +25,8 @@ use std::sync::OnceLock;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 /// This spike's own app dir (tokens). The OAuth client file lives in S0's dir.
-pub const APP_DIR: &str = "com.ziggy.gmail-ro-spikes-s1";
-const CLIENT_DIR: &str = "com.ziggy.gmail-ro-spikes";
+pub const APP_DIR: &str = "com.ziggy.stardust-mail-spikes-s1";
+const CLIENT_DIR: &str = "com.ziggy.stardust-mail-spikes";
 /// Token endpoint.
 pub const TOKEN_ENDPOINT: &str = "https://oauth2.googleapis.com/token";
 /// Revoke endpoint.
@@ -48,7 +48,7 @@ fn local_app_data() -> PathBuf {
     std::env::var_os("LOCALAPPDATA").map(PathBuf::from).unwrap_or_else(std::env::temp_dir)
 }
 
-/// `%LOCALAPPDATA%\com.ziggy.gmail-ro-spikes-s1` (this spike's token store root).
+/// `%LOCALAPPDATA%\com.ziggy.stardust-mail-spikes-s1` (this spike's token store root).
 pub fn data_dir() -> PathBuf {
     local_app_data().join(APP_DIR)
 }
@@ -73,7 +73,7 @@ impl std::fmt::Debug for Client {
     }
 }
 
-/// Load the client from S0's folder (`...\com.ziggy.gmail-ro-spikes\oauth-client.json`).
+/// Load the client from S0's folder (`...\com.ziggy.stardust-mail-spikes\oauth-client.json`).
 pub fn load_client() -> Result<Client, Error> {
     load_client_from(&local_app_data().join(CLIENT_DIR).join("oauth-client.json"))
 }
@@ -104,7 +104,7 @@ pub fn http() -> reqwest::Client {
     C.get_or_init(|| {
         reqwest::Client::builder()
             .timeout(Duration::from_secs(30))
-            .user_agent("gmail-ro-spikes-s1/0.1")
+            .user_agent("stardust-mail-spikes-s1/0.1")
             .build()
             .expect("reqwest client")
     })

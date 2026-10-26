@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "gmail-ro S3 harness",
+  "productName": "stardust-mail S3 harness",
   "version": "0.1.0",
-  "identifier": "com.ziggy.gmail-ro-spikes-s3",
+  "identifier": "com.ziggy.stardust-mail-spikes-s3",
   "build": {
     "frontendDist": "../ui"
   },

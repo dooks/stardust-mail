@@ -1,4 +1,4 @@
-// gmail-ro UI. Vanilla JS; all text via textContent (never innerHTML) except the iframe srcdoc.
+// stardust-mail UI. Vanilla JS; all text via textContent (never innerHTML) except the iframe srcdoc.
 (function () {
   "use strict";
 
@@ -222,7 +222,7 @@
             title: "Signed out of " + acc.email,
             paragraphs: [
               { text: "The app could not tell Google to revoke its access. Local data was deleted, but you should remove access manually." },
-              { text: "Open myaccount.google.com → Security → Third-party apps and remove gmail-ro.", dim: true },
+              { text: "Open myaccount.google.com → Security → Third-party apps and remove stardust-mail.", dim: true },
             ],
             buttons: [{ label: "OK", cls: "primary", onClick: closeModal }],
           });

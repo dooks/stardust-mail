@@ -12,7 +12,7 @@ struct Tmp(PathBuf);
 impl Tmp {
     fn new() -> Tmp {
         let p = std::env::temp_dir().join(format!(
-            "gmail-ro-cache-test-{}-{}",
+            "stardust-mail-cache-test-{}-{}",
             std::process::id(),
             N.fetch_add(1, Ordering::SeqCst)
         ));

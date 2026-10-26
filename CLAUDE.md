@@ -1,4 +1,4 @@
-# gmail-ro
+# stardust-mail
 
 A native Windows app (Rust + Tauri 2) that shows the mail of **several Gmail accounts read-only**. The main use case is opening the app, finding the newest authentication-code email, and reading it.
 

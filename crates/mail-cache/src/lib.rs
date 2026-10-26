@@ -1,7 +1,7 @@
 //! Per-account encrypted cache (PLAN §1 Cache, §3.3, WP-C).
 //!
 //! Layout: `<root>\<sub>\cache.db` (SQLite, WAL) + `<root>\<sub>\key.dpapi` (32-byte key, DPAPI with entropy
-//! `gmail-ro-cache-key`). Headers, snippet and raw bodies are ChaCha20-Poly1305 blobs (random 12-byte nonce
+//! `stardust-mail-cache-key`). Headers, snippet and raw bodies are ChaCha20-Poly1305 blobs (random 12-byte nonce
 //! prepended, the row id as AAD). Ids, label ids, dates and sizes are in the clear.
 //!
 //! Schema (created by `CacheRoot::account`):
@@ -33,7 +33,7 @@ use rusqlite::{Connection, OptionalExtension, params};
 mod tests;
 
 /// DPAPI entropy of `key.dpapi`.
-pub const KEY_ENTROPY: &[u8] = b"gmail-ro-cache-key";
+pub const KEY_ENTROPY: &[u8] = b"stardust-mail-cache-key";
 /// Schema version stored in `meta`.
 pub const SCHEMA_VERSION: u32 = 1;
 /// Body cap per account (bytes of raw RFC 822, before encryption).
@@ -112,7 +112,7 @@ pub struct CacheRoot {
 }
 
 impl CacheRoot {
-    /// Use `dir` (`%LOCALAPPDATA%\com.ziggy.gmail-ro\cache`), creating it if needed.
+    /// Use `dir` (`%LOCALAPPDATA%\com.ziggy.stardust-mail\cache`), creating it if needed.
     pub fn open(dir: &Path) -> Result<CacheRoot, CacheError> {
         std::fs::create_dir_all(dir).map_err(io)?;
         Ok(CacheRoot {

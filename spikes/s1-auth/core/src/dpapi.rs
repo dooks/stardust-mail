@@ -7,7 +7,7 @@ use windows::Win32::Security::Cryptography::{
 use windows::core::w;
 
 // Extra entropy so another app running as the same user can't just call CryptUnprotectData blindly.
-const ENTROPY: &[u8] = b"gmail-ro-spikes-s1-token";
+const ENTROPY: &[u8] = b"stardust-mail-spikes-s1-token";
 
 fn blob(d: &[u8]) -> CRYPT_INTEGER_BLOB {
     CRYPT_INTEGER_BLOB { cbData: d.len() as u32, pbData: d.as_ptr() as *mut u8 }
@@ -28,7 +28,7 @@ pub fn protect(data: &[u8]) -> windows::core::Result<Vec<u8>> {
     let (input, entropy) = (blob(data), blob(ENTROPY));
     let mut out = CRYPT_INTEGER_BLOB::default();
     unsafe {
-        CryptProtectData(&input, w!("gmail-ro spikes s1 token"), Some(&entropy), None, None, CRYPTPROTECT_UI_FORBIDDEN, &mut out)?;
+        CryptProtectData(&input, w!("stardust-mail spikes s1 token"), Some(&entropy), None, None, CRYPTPROTECT_UI_FORBIDDEN, &mut out)?;
         Ok(take(out))
     }
 }

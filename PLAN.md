@@ -1,4 +1,4 @@
-# gmail-ro: build plan
+# stardust-mail: build plan
 
 A native Windows app (Rust + Tauri 2) that signs into **several Gmail accounts** and shows their mail **read-only**. The main job is: open the app, see the newest mail (often a sign-in code), and read it.
 
@@ -22,7 +22,7 @@ Evidence for every decision is in `spikes\sN-*\FINDINGS.md`.
 | Sign-in | System browser + loopback `127.0.0.1:<ephemeral>` + PKCE S256 + `state` + `access_type=offline` + `prompt=consent select_account` + `login_hint`. One pending sign-in app-wide. Cancel and a 5-minute timeout. Raise the window afterwards. **Never in a webview.** | S0, S1 |
 | Granular consent | Gmail is often left **unticked** (2 of 5 real sign-ins). Show the instruction "On Google's page, tick *Read all your email*" **before** opening the browser. If the scope is still missing: store nothing, explain, and offer one-click retry. | S0, S1 |
 | Publishing | The project stays in **Testing**, so refresh tokens die after **7 days**. `needs_reauth` must be painless: a per-account banner with a one-click "Sign in again" (`login_hint`), the cache stays readable, and that account stops polling. Production comes later, when branding pages exist. | S1, user |
-| Token store | `%LOCALAPPDATA%\com.ziggy.gmail-ro\accounts\<sub>.dpapi`: DPAPI (CurrentUser, UI forbidden, entropy `gmail-ro-token`) of `{email, sub, refresh_token, scopes, created_at, needs_reauth}`. Written via tmp + rename. A file that fails to decrypt is skipped, not fatal. Access tokens are in memory only, with `invalidate()`. | S0, S1, S4 |
+| Token store | `%LOCALAPPDATA%\com.ziggy.stardust-mail\accounts\<sub>.dpapi`: DPAPI (CurrentUser, UI forbidden, entropy `stardust-mail-token`) of `{email, sub, refresh_token, scopes, created_at, needs_reauth}`. Written via tmp + rename. A file that fails to decrypt is skipped, not fatal. Access tokens are in memory only, with `invalidate()`. | S0, S1, S4 |
 | Sign-out | `POST https://oauth2.googleapis.com/revoke` (form body), then **always** delete locally (token file + cache directory). If the revoke fails, tell the user to remove access at myaccount.google.com → Security → Third-party apps. `400 invalid_token` means it was already gone. **A revoke kills the whole grant for that account** (every token from this client). | S1 |
 | Auth errors | Gmail 401: invalidate the token, refresh once, retry once. `invalid_grant` or 403 `PERMISSION_DENIED` (scope) → `needs_reauth`. A network error is "offline" and doesn't change the account state. | S1, S4 |
 | Quota | `messages.get` **20** units (raw 60), `messages.list` 5, `history.list` 2, `labels.*`/profile 1. **6,000 units/min per user.** Throttling arrives as **403 `rateLimitExceeded`** (or 429), usually without Retry-After. Back off as in §3.6. Never fetch more than ~5 pages of 50 per minute per account. | S2, S4 |
@@ -52,7 +52,7 @@ Evidence for every decision is in `spikes\sN-*\FINDINGS.md`.
 ## 2. Repository layout (created in Wave 0)
 
 ```
-gmail-ro\
+stardust-mail\
   Cargo.toml                 workspace (resolver 2), shared [workspace.dependencies]
   PLAN.md  SPIKES.md  CLAUDE.md
   crates\
@@ -95,7 +95,7 @@ Steps:
 3. Write the contracts below. `cargo build --workspace` and `cargo test --workspace` must pass.
 4. Scaffold `app\` with `cargo create-tauri-app -m cargo -t vanilla`.
    - Point `frontendDist` at `..\ui`.
-   - Identifier `com.ziggy.gmail-ro`.
+   - Identifier `com.ziggy.stardust-mail`.
    - Register the §3.7 commands as stubs.
    - The capability grants `core:default` plus `dialog:allow-save` only.
 5. Commit as "skeleton". Each Wave 1 agent works in **its own git worktree/branch** `wp-<letter>` off this commit.
@@ -145,10 +145,10 @@ Steps:
   - `AttachmentInfo { partId: u32, name, mime, size: u64 }`
   - `SyncStatus { accountId, state: ok|syncing|offline|throttled|needsReauth, asOf: Option<i64> }`
   - `SaveResult { saved: bool, fileName: Option<String> }` (never the full path in logs)
-- Constants: `APP_ID = "com.ziggy.gmail-ro"`, `ASSET_HOST = "http://gmail-asset.localhost"`, `MAX_CACHED_BODY = 5 * 1024 * 1024`.
+- Constants: `APP_ID = "com.ziggy.stardust-mail"`, `ASSET_HOST = "http://gmail-asset.localhost"`, `MAX_CACHED_BODY = 5 * 1024 * 1024`.
 
 ### 3.2 `gauth` public API
-- `Client::load(path)` reads `%LOCALAPPDATA%\com.ziggy.gmail-ro\oauth-client.json`. The user copies it there from the spike folder.
+- `Client::load(path)` reads `%LOCALAPPDATA%\com.ziggy.stardust-mail\oauth-client.json`. The user copies it there from the spike folder.
 - `struct Store` (`open(dir)`, `list() -> (Vec<StoredAccount>, skipped: usize)`, `save`, `set_needs_reauth(&AccountId, bool)`, `delete(&AccountId)`)
 - `struct PendingLogin` (`url()`, `reopen_browser()`, `cancel()`)
 - `async fn begin_login(client, hint: Option<&str>) -> Result<PendingLogin, AuthError>`
@@ -393,7 +393,7 @@ Start each agent with: "Read `CLAUDE.md`, `PLAN.md` §1, §3 and your WP section
 
 ### WP-I: wire the host and check end to end, one agent with the user present
 - Swap `MockService` for `Service`.
-- The user copies `oauth-client.json` from `%LOCALAPPDATA%\com.ziggy.gmail-ro-spikes\` to `%LOCALAPPDATA%\com.ziggy.gmail-ro\`.
+- The user copies `oauth-client.json` from `%LOCALAPPDATA%\com.ziggy.stardust-mail-spikes\` to `%LOCALAPPDATA%\com.ziggy.stardust-mail\`.
 - Sign in all three accounts, watching for the unticked Gmail box.
 - Check, with the user:
   - inbox shows instantly on the second launch
@@ -412,7 +412,7 @@ Start each agent with: "Read `CLAUDE.md`, `PLAN.md` §1, §3 and your WP section
 ---
 
 ## 6. Wave 3: finishing (parallel, after WP-I)
-- **WP-J, release binary (no installer; user decision):** a single portable `gmail-ro.exe` from `cargo build --release -p gmail-ro`, to drop into `C:\Apps`. The UI is embedded, it runs as a GUI app (no console), and its data lives in `%LOCALAPPDATA%\com.ziggy.gmail-ro`. It relies on the WebView2 runtime that ships with Windows 11. Done by the coordinator after K1–K3 merge.
+- **WP-J, release binary (no installer; user decision):** a single portable `stardust-mail.exe` from `cargo build --release -p stardust-mail`, to drop into `C:\Apps`. The UI is embedded, it runs as a GUI app (no console), and its data lives in `%LOCALAPPDATA%\com.ziggy.stardust-mail`. It relies on the WebView2 runtime that ships with Windows 11. Done by the coordinator after K1–K3 merge.
 - **WP-K1, render hardening** (`crates\mail-render\**`):
   - proptest `parse`, `render` and the sanitizer on arbitrary and mutated input (no panics, and the output invariants hold)
   - a 2 MB cap on rendered page size, falling back to plain text
@@ -421,7 +421,7 @@ Start each agent with: "Read `CLAUDE.md`, `PLAN.md` §1, §3 and your WP section
   - `Service::message` revalidates a stale row with one metadata get before opening it: a deleted message shows a friendly "no longer in Gmail" state, not an error.
   - The internalDate fallback uses `meta` instead of scanning.
 - **WP-K3, logging and audit** (`app\src-tauri\**`, `crates\mail-service` logging calls only if needed):
-  - a redacted rolling log file at `%LOCALAPPDATA%\com.ziggy.gmail-ro\logs`, with the dates of sign-ins and re-auth triggers
+  - a redacted rolling log file at `%LOCALAPPDATA%\com.ziggy.stardust-mail\logs`, with the dates of sign-ins and re-auth triggers
   - a final read-only audit: grep the whole workspace for non-GET Gmail calls and forbidden endpoints, reported as a test
 
 ---

@@ -42,7 +42,7 @@ impl fmt::Debug for StoredAccount {
     }
 }
 
-/// Directory of `<sub>.dpapi` files (`%LOCALAPPDATA%\com.ziggy.gmail-ro\accounts`). Cheap to clone.
+/// Directory of `<sub>.dpapi` files (`%LOCALAPPDATA%\com.ziggy.stardust-mail\accounts`). Cheap to clone.
 #[derive(Debug, Clone)]
 pub struct Store {
     dir: PathBuf,
